@@ -13,7 +13,6 @@ Hardened VM deployments for OpenClaw.
 
 ### Pre-Requisites
 - Host with fresh Debian 13 install
-- 
 - Tailscale account (+ auth key)
 
 ### Setup
