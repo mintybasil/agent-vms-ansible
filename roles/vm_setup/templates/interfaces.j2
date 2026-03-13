@@ -3,8 +3,8 @@
 auto lo
 iface lo inet loopback
 
-auto {{ vm_network_iface | default('ens3') }}
-iface {{ vm_network_iface | default('ens3') }} inet static
+auto {{ vm_network_iface | default('enp1s0') }}
+iface {{ vm_network_iface | default('enp1s0') }} inet static
     address {{ vm_ip }}
     netmask {{ vm_netmask | default('255.255.255.0') }}
     gateway {{ vm_gateway | default('192.168.122.1') }}

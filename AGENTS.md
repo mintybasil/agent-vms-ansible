@@ -31,9 +31,14 @@ ansible.cfg         # Project-level Ansible config
 | `host_tailscale` | Install and auth Tailscale on host |
 | `host_promtail` | Deploy Promtail as a systemd service |
 | `host_nftables` | Configure nftables firewall on host |
-| `host_vm_deploy` | Create KVM VM using libvirt + cloud-init |
+| `host_vm_deploy` | Create one or more KVM VMs using libvirt + cloud-init |
 | `vm_setup` | VM-level network/interface config |
 | `caddy` | Install Caddy + generate Caddyfile from template |
+
+The `host_vm_deploy` role loops over a `vms` list. One-time host resources (packages,
+the libvirt `default` NAT network, the storage pool, the base Debian cloud image) are
+set up once; per-VM resources (disk copy, cloud-init ISO, libvirt domain) are created
+for each entry in the list.
 
 ---
 
@@ -50,20 +55,34 @@ Two host groups:
 
 ## Key Variables
 
+### Host-level
+
 | Variable | Where | Notes |
 |---|---|---|
 | `host_user` | group_vars/all.yml | SSH user on host |
 | `host_ssh_port` | group_vars/all.yml | Default 22; change it |
-| `vm_vm_user` | group_vars/all.yml | Default `debian` |
-| `vm_ssh_public_key` | group_vars/all.yml | Your SSH public key for VM |
-| `vm_vm_name` | group_vars/all.yml | VM name (used in libvirt) |
-| `vm_ip` | group_vars/all.yml | Local IP of VM on host |
+| `promtail_enabled` | group_vars/all.yml | Set `true` to enable log shipping |
 | `caddy_basicauth_user` | group_vars/all.yml | Basic auth username for Caddy |
 | `caddy_basicauth_hash` | group_vars/all.yml | Bcrypt hash via `caddy hash-password` |
 | `caddy_tailnet_domain` | group_vars/all.yml | Tailscale MagicDNS domain (`*.ts.net`) |
-| `promtail_enabled` | group_vars/all.yml | Set `true` to enable log shipping |
 
-Secrets (auth keys, passwords) are passed via `-e` at runtime — **never commit them**.
+### VM list (`vms`)
+
+VMs are defined as a list in `group_vars/all.yml`. Each entry creates one libvirt domain.
+
+| Field | Required | Default | Notes |
+|---|---|---|---|
+| `name` | ✅ | — | VM hostname + libvirt domain name; must be unique |
+| `ip` | ✅ | — | Static IP on the libvirt NAT network (192.168.122.x) |
+| `ssh_public_key` | ✅ | — | SSH public key for `vm_vm_user` |
+| `disk_size` | | `20G` | Passed to `qemu-img resize` |
+| `memory_mib` | | `4096` | RAM in MiB |
+| `vcpus` | | `4` | vCPU count |
+| `network_iface` | | `enp1s0` | Guest NIC name (consistent for virtio-net) |
+
+The `vm_vm_user` global (default: `debian`) is the OS user provisioned inside every VM.
+
+Secrets (`tailscale_auth_key`, passwords) are passed via `-e` at runtime — **never commit them**.
 
 ---
 

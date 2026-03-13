@@ -7,14 +7,35 @@ promtail_enabled: false
 # promtail_basic_auth_user: ""
 # promtail_basic_auth_password: ""
 
+# Default OS user provisioned inside each VM via cloud-init.
 vm_vm_user: debian
-vm_ssh_public_key: "ssh-ed25519 ..."
-vm_vm_name: ""
-# Local IP of VM on host machine
-vm_ip:
+
+# VM definitions — one entry per VM.
+# The base Debian cloud image is downloaded once; each VM gets its own disk copy.
+# The shared libvirt pool and default NAT network support multiple VMs without changes.
+#
+# Pass tailscale_auth_key at runtime: -e tailscale_auth_key=<key>
+# Use ephemeral one-time keys (not reusable) for security.
+vms:
+  - name: openclaw-vm-1
+    ip: 192.168.122.10          # Static IP on libvirt NAT network
+    ssh_public_key: "ssh-ed25519 ..."
+    disk_size: 20G              # optional, default: 20G
+    memory_mib: 4096            # optional, default: 4096
+    vcpus: 4                    # optional, default: 4
+    network_iface: enp1s0       # optional, default: enp1s0
+
+  # Uncomment to add a second VM:
+  # - name: openclaw-vm-2
+  #   ip: 192.168.122.11
+  #   ssh_public_key: "ssh-ed25519 ..."
+  #   disk_size: 20G
+  #   memory_mib: 4096
+  #   vcpus: 4
+  #   network_iface: enp1s0
 
 caddy_basicauth_user:
 # Use `caddy hash-password` - https://caddyserver.com/docs/command-line#caddy-hash-password
 caddy_basicauth_hash:
 # Tailscale MagicDNS of the VM
-caddy_tailnet_domain: *.ts.net
+caddy_tailnet_domain: "*.ts.net"

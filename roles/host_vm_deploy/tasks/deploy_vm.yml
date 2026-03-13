@@ -1,0 +1,108 @@
+---
+# Per-VM provisioning tasks. Called in a loop from main.yml with `vm` as the loop var.
+# Each VM gets:
+#   - Its own disk image: <name>-<cloud-image>.qcow2
+#   - Its own seed ISO:   <name>-seed.iso
+#   - Its own cloud-init config dir: {{ vm_cloud_init_base_path }}/<name>/
+
+- name: "{{ vm.name }} | Set derived facts"
+  ansible.builtin.set_fact:
+    _vm_disk_image: "{{ vm.name }}-{{ vm_debian_cloud_image }}"
+    _vm_seed_iso: "{{ vm.name }}-seed.iso"
+    _vm_cloud_init_path: "{{ vm_cloud_init_base_path }}/{{ vm.name }}"
+
+# ── Disk image ─────────────────────────────────────────────────────────────────
+
+- name: "{{ vm.name }} | Check if disk image exists"
+  ansible.builtin.stat:
+    path: "{{ vm_image_dir }}/{{ _vm_disk_image }}"
+  register: vm_disk_image_stat
+
+- name: "{{ vm.name }} | Copy base image to VM disk"
+  ansible.builtin.command:
+    chdir: "{{ vm_image_dir }}"
+    cmd: "qemu-img convert -f qcow2 -O qcow2 {{ vm_debian_cloud_image }} {{ _vm_disk_image }}"
+  when: not vm_disk_image_stat.stat.exists
+
+- name: "{{ vm.name }} | Resize disk image"
+  ansible.builtin.command:
+    chdir: "{{ vm_image_dir }}"
+    cmd: "qemu-img resize {{ _vm_disk_image }} {{ vm.disk_size | default('20G') }}"
+  when: not vm_disk_image_stat.stat.exists
+
+# ── Cloud-init seed ISO ────────────────────────────────────────────────────────
+
+- name: "{{ vm.name }} | Check if seed ISO exists"
+  ansible.builtin.stat:
+    path: "{{ vm_image_dir }}/{{ _vm_seed_iso }}"
+  register: seed_img_stat
+
+- name: "{{ vm.name }} | Ensure cloud-init config directory exists"
+  ansible.builtin.file:
+    path: "{{ _vm_cloud_init_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  when: not seed_img_stat.stat.exists
+
+- name: "{{ vm.name }} | Render cloud-init user-data"
+  ansible.builtin.template:
+    src: user-data
+    dest: "{{ _vm_cloud_init_path }}/user-data"
+    owner: root
+    group: root
+    mode: "0600"
+  when: not seed_img_stat.stat.exists
+
+- name: "{{ vm.name }} | Render cloud-init meta-data"
+  ansible.builtin.template:
+    src: meta-data
+    dest: "{{ _vm_cloud_init_path }}/meta-data"
+    owner: root
+    group: root
+    mode: "0600"
+  when: not seed_img_stat.stat.exists
+
+- name: "{{ vm.name }} | Render cloud-init network-config"
+  ansible.builtin.template:
+    src: network-config
+    dest: "{{ _vm_cloud_init_path }}/network-config"
+    owner: root
+    group: root
+    mode: "0600"
+  when: not seed_img_stat.stat.exists
+
+- name: "{{ vm.name }} | Build cloud-init seed ISO"
+  ansible.builtin.command:
+    cmd: >
+      cloud-localds
+      {{ vm_image_dir }}/{{ _vm_seed_iso }}
+      {{ _vm_cloud_init_path }}/user-data
+      {{ _vm_cloud_init_path }}/meta-data
+      --network-config {{ _vm_cloud_init_path }}/network-config
+    creates: "{{ vm_image_dir }}/{{ _vm_seed_iso }}"
+  when: not seed_img_stat.stat.exists
+
+# ── VM domain ─────────────────────────────────────────────────────────────────
+
+- name: "{{ vm.name }} | List defined VMs"
+  community.libvirt.virt:
+    command: list_vms
+  register: all_vms
+
+- name: "{{ vm.name }} | Define VM from XML template"
+  community.libvirt.virt:
+    command: define
+    xml: "{{ lookup('template', 'vm.xml.j2') }}"
+  when: vm.name not in all_vms.list_vms
+
+- name: "{{ vm.name }} | Ensure VM is running"
+  community.libvirt.virt:
+    name: "{{ vm.name }}"
+    state: running
+
+- name: "{{ vm.name }} | Enable autostart"
+  ansible.builtin.command:
+    cmd: "virsh autostart {{ vm.name }}"
+  changed_when: false
