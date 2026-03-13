@@ -1,0 +1,11 @@
+all:
+  hosts:
+    openclaw_host:
+      ansible_host: ""
+      vars:
+        ansible_user: "{{ host_user }}"
+
+    openclaw_vm:
+      ansible_host: ""
+      vars:
+        ansible_user: "{{ vm_vm_user }}"

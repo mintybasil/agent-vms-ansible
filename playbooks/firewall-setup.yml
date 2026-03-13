@@ -1,0 +1,7 @@
+---
+- name: Configure firewall
+  hosts: openclaw_host
+  become: true
+
+  roles:
+    - role: host_nftables

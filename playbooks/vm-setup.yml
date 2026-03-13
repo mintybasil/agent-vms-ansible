@@ -1,0 +1,7 @@
+---
+- name: Configure VM applications
+  hosts: openclaw_vm
+  become: true
+  roles:
+    - role: caddy
+

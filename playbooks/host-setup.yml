@@ -1,0 +1,8 @@
+---
+- name: Configure host machine
+  hosts: openclaw_host
+  become: true
+
+  roles:
+    - role: host_tailscale
+    - role: host_promtail

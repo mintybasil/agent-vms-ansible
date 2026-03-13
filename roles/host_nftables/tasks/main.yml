@@ -1,0 +1,51 @@
+---
+- name: Install nftables
+  ansible.builtin.apt:
+    name: nftables
+    state: present
+    update_cache: true
+
+- name: Flush legacy iptables rules
+  ansible.builtin.command: "{{ item }}"
+  loop:
+    - iptables -F
+    - iptables -t nat -F
+    - iptables -t mangle -F
+    - iptables -P INPUT ACCEPT
+    - iptables -P FORWARD ACCEPT
+    - iptables -P OUTPUT ACCEPT
+  changed_when: false
+
+- name: Enable IP forwarding
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+    reload: true
+
+- name: Gather VM bridge interface info
+  ansible.builtin.set_fact:
+    vm_bridge_iface: "{{ item }}"
+  loop: "{{ ansible_interfaces }}"
+  when: item.startswith('virbr')
+
+- name: Gather VM bridge IP info
+  ansible.builtin.set_fact:
+    vm_bridge_subnet: "{{ ansible_facts[vm_bridge_iface]['ipv4']['address'] }}/{{ ansible_facts[vm_bridge_iface]['ipv4']['prefix'] }}"
+  when: vm_bridge_iface is defined
+
+- name: Deploy nftables config
+  ansible.builtin.template:
+    src: nftables.conf.j2
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: "0640"
+    validate: nft --check -f %s
+  notify: Reload nftables
+
+- name: Enable and start nftables
+  ansible.builtin.systemd:
+    name: nftables
+    state: started
+    enabled: true

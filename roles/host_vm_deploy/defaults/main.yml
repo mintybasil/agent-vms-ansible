@@ -1,0 +1,8 @@
+vm_image_dir: /var/lib/libvirt/images/
+vm_debian_cloud_image: debian-13-genericcloud-amd64.qcow2
+vm_debian_cloud_image_url: "https://cloud.debian.org/images/cloud/trixie/latest/{{ vm_debian_cloud_image }}"
+vm_cloud_init_config_path: "/root/cloud-init"
+vm_vm_name: "openclaw-vm"
+vm_disk_image: "{{ vm_vm_name }}-{{ vm_debian_cloud_image }}"
+vm_seed_iso: "{{ vm_vm_name }}-seed.iso"
+vm_disk_size: "20G"

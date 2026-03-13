@@ -1,0 +1,36 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /var/lib/promtail/positions.yaml
+
+clients:
+  - url: {{ promtail_loki_url }}
+{% if promtail_basic_auth_user is defined and promtail_basic_auth_user | length > 0 %}
+    basic_auth:
+      username: {{ promtail_basic_auth_user }}
+      password: {{ promtail_basic_auth_password }}
+{% endif %}
+
+scrape_configs:
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: varlog
+          host: {{ ansible_facts["hostname"] }}
+          __path__: /var/log/*.log
+
+  {% if promtail_scrape_journal -%}
+  - job_name: journal
+    journal:
+      path: /var/log/journal
+      max_age: 12h
+    relabel_configs:
+      - source_labels: ['__journal__hostname']
+        target_label: hostname
+      - source_labels: ['__journal__systemd_unit']
+        target_label: unit
+  {% endif %}

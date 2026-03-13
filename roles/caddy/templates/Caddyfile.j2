@@ -1,0 +1,14 @@
+# Caddy — reverse proxy for OpenClaw (Ansible-managed)
+# Listen on :443; firewall restricts to Tailscale. Use basicauth or app-level token.
+
+{{ caddy_tailnet_domain }}:{{ caddy_https_port }} {
+   tls /etc/caddy/zeroklaw-vm.tailec2a.ts.net.crt  /etc/caddy/zeroklaw-vm.tailec2a.ts.net.key
+
+  basicauth {
+    {{ caddy_basicauth_user }} {{ caddy_basicauth_hash }}
+  }
+
+  reverse_proxy 127.0.0.1:{{ caddy_proxy_port }} {
+    header_up X-Forwarded-User {{ caddy_basicauth_user }}
+  }
+}

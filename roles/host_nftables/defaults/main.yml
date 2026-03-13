@@ -1,0 +1,5 @@
+vm_allowed_outbound_ports:
+- 80 # Http
+- 443 # Https
+- 41641 # Direct wireguard connections (Tailscale)
+- 3478 # STUN for NAT traversal

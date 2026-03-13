@@ -1,0 +1,20 @@
+host_user:
+host_ssh_port: 22 # Strongly recommend changing this
+
+# Promtail: push to Loki or HTTP endpoint.
+promtail_enabled: false
+# promtail_loki_url:
+# promtail_basic_auth_user: ""
+# promtail_basic_auth_password: ""
+
+vm_vm_user: debian
+vm_ssh_public_key: "ssh-ed25519 ..."
+vm_vm_name: ""
+# Local IP of VM on host machine
+vm_ip:
+
+caddy_basicauth_user:
+# Use `caddy hash-password` - https://caddyserver.com/docs/command-line#caddy-hash-password
+caddy_basicauth_hash:
+# Tailscale MagicDNS of the VM
+caddy_tailnet_domain: *.ts.net

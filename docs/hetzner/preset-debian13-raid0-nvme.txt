@@ -1,0 +1,33 @@
+# Installimage preset: Debian 13 (Trixie) Base — RAID0 on two NVMe drives
+# Debian 13 is current stable (from Aug 2025); preferred for longest security support.
+# Server is assumed to have two NVMe drives (e.g. nvme0n1, nvme1n1).
+#
+# Usage in Rescue:
+#   1. lsblk  →  set DRIVE1 and DRIVE2 to your NVMe block devices
+#   2. installimage  →  choose Debian 13 (Trixie) Base, then replace config with this (or merge)
+#   3. Set IMAGE to the path shown by installimage for Debian 13 Base
+#
+# Note: For RAID0, /boot should be RAID1 so the system can boot. If your
+# installimage version uses one SWRAIDLEVEL for all, check the script docs;
+# some setups create /boot as RAID1 and the rest as RAID0.
+
+HOSTNAME openclaw-host
+
+# Two NVMe drives — set to your block devices (lsblk)
+DRIVE1 /dev/nvme0n1
+DRIVE2 /dev/nvme1n1
+
+# Software RAID: enabled, level 0 (striping)
+SWRAID 1
+SWRAIDLEVEL 0
+
+# Partitions: /boot 512M, rest in LVM (swap 8G, then root gets remainder)
+# installimage requires the LV with size "all" to be the last LV in the VG
+PART /boot ext4 512M
+PART lvm vg0 all
+
+LV vg0 swap swap swap 8G
+LV vg0 root / ext4 all
+
+# Set IMAGE to the path shown by installimage for Debian 13 Base (e.g. Debian-1300-amd64-base.tar.gz)
+IMAGE /root/images/Debian-1303-trixie-amd64-base.tar.gz

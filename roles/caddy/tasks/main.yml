@@ -1,0 +1,45 @@
+---
+- name: Check if caddy is installed
+  ansible.builtin.command:
+    cmd: systemctl status caddy
+  register: caddy_status
+  changed_when: false
+  failed_when: false
+
+- name: Install Caddy GPG key
+  when: caddy_status.rc != 0
+  ansible.builtin.shell: |
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+  args:
+    creates: /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+
+- name: Add Caddy APT repository
+  when: caddy_status.rc != 0
+  ansible.builtin.get_url:
+    url: "https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt"
+    dest: /etc/apt/sources.list.d/caddy-stable.list
+    mode: "0644"
+    force: true
+
+- name: Install Caddy package
+  when: caddy_status.rc != 0
+  ansible.builtin.apt:
+    name: caddy
+    state: present
+    update_cache: true
+
+- name: Deploy Caddyfile
+  ansible.builtin.template:
+    src: Caddyfile.j2
+    dest: /etc/caddy/Caddyfile
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload Caddy
+
+- name: Enable and start Caddy
+  ansible.builtin.systemd:
+    name: caddy
+    state: started
+    enabled: true
+    daemon_reload: true

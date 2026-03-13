@@ -1,0 +1,38 @@
+#cloud-config
+hostname: {{ vm_vm_name }}
+fqdn: {{ vm_vm_name }}.local
+
+users:
+  - name: {{ vm_vm_user }}
+    groups: sudo
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    lock_passwd: true  # Disable password login
+    ssh_authorized_keys:
+      - {{ vm_ssh_public_key }}
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - curl
+  - ca-certificates
+  - gpg
+
+write_files:
+  - path: /usr/local/bin/setup-tailscale.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+      curl -fsSL https://pkgs.tailscale.com/stable/debian/trixie.gpg | gpg --dearmor -o /usr/share/keyrings/tailscale-archive-keyring.gpg
+      echo "deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/debian trixie main" > /etc/apt/sources.list.d/tailscale.list
+      apt-get update -y
+      apt-get install -y tailscale
+      tailscale up --authkey={{ tailscale_auth_key }} --hostname={{ vm_vm_name }}
+
+runcmd:
+  - /usr/local/bin/setup-tailscale.sh
+
+final_message: |
+  Cloud-init complete. You can ssh into the VM using tailscale ssh {{ vm_vm_user }}@{{ vm_vm_name }}.

@@ -1,0 +1,11 @@
+# Managed by Ansible - do not edit manually
+
+auto lo
+iface lo inet loopback
+
+auto {{ vm_network_iface | default('ens3') }}
+iface {{ vm_network_iface | default('ens3') }} inet static
+    address {{ vm_ip }}
+    netmask {{ vm_netmask | default('255.255.255.0') }}
+    gateway {{ vm_gateway | default('192.168.122.1') }}
+    dns-nameservers {{ vm_dns | default('192.168.122.1') }}

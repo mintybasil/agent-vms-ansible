@@ -1,0 +1,43 @@
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+table inet firewall {
+
+    chain input {
+        type filter hook input priority 0; policy drop;
+
+        ct state established,related accept
+        ct state invalid drop
+        iifname "lo" accept
+        iifname "tailscale0" accept       # Tailscale interface
+        iifname "{{ vm_bridge_iface }}" accept    # trust traffic from VM to host (DNS, DHCP)
+        udp dport 41641 accept            # WireGuard inbound handshakes
+        tcp dport {{ host_ssh_port }} accept
+    }
+
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+
+        ct state established,related accept
+
+        # allow VM DNS queries out
+        iifname "{{ vm_bridge_iface }}" udp dport 53 accept
+
+        # VM egress: allow outbound HTTP/S from VM subnet only
+        iifname "{{ vm_bridge_iface }}" ip daddr != {{ vm_bridge_subnet }} tcp dport { {{ vm_allowed_outbound_ports | join(', ') }} } accept
+
+        # drop everything else originating from VM
+        iifname "{{ vm_bridge_iface }}" drop
+    }
+
+    chain output {
+        type filter hook output priority 0; policy accept;
+    }
+
+    chain postrouting {
+        type nat hook postrouting priority srcnat;
+        iifname "{{ vm_bridge_iface }}" masquerade;
+    }
+
+}
