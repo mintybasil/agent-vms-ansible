@@ -19,26 +19,19 @@ ansible.cfg         # Project-level Ansible config
 
 | Playbook | Target | Purpose |
 |---|---|---|
-| `host-setup.yml` | `openclaw_host` | Install Tailscale + Promtail on bare metal host |
-| `host-deploy.yml` | `openclaw_host` | Provision KVM VM via cloud-init |
-| `vm-setup.yml` | `openclaw_vms` | Configure Caddy inside the VM |
-| `firewall-setup.yml` | `openclaw_host` | Apply nftables firewall rules to host |
-
+| `host-setup.yml` | `openclaw_host` | User, SSH hardening, libvirt, nftables, Tailscale, Promtail (use `--tags` to run specific parts) |
+| `vm-deploy.yml` | `openclaw_host` | Provision KVM VM via cloud-init (requires libvirt from host-setup) |
+| `vm-setup.yml` | `openclaw_vms` | Configure Caddy (and other VM-level config) inside the VM; use `--tags caddy` for Caddy only |
 ### Roles
 
 | Role | Purpose |
 |---|---|
-| `host_tailscale` | Install and auth Tailscale on host |
-| `host_promtail` | Deploy Promtail as a systemd service |
-| `host_nftables` | Configure nftables firewall on host |
-| `host_vm_deploy` | Create one or more KVM VMs using libvirt + cloud-init |
-| `vm_setup` | VM-level network/interface config |
+| `host_setup` | Single role for host config: user, SSH hardening, libvirt (pool/network), nftables, Tailscale, Promtail. Each area is a task file invoked by tag: `user`, `ssh_hardening`, `libvirt`, `nftables`, `tailscale`, `promtail`. |
+| `host_vm_deploy` | Create one or more KVM VMs using libvirt + cloud-init; assumes libvirt pool and default NAT network from `host_setup` (tag `libvirt`) |
+| `vm_setup` | VM-level network/interface config (e.g. static interfaces); not currently wired into a playbook |
 | `caddy` | Install Caddy + generate Caddyfile from template |
 
-The `host_vm_deploy` role loops over a `vms` list. One-time host resources (packages,
-the libvirt `default` NAT network, the storage pool, the base Debian cloud image) are
-set up once; per-VM resources (disk copy, cloud-init ISO, libvirt domain) are created
-for each entry in the list.
+One-time host resources (packages, libvirt `default` NAT network, storage pool, base Debian cloud image) are set up by `host_setup` (tag `libvirt`) and `host_vm_deploy` respectively. The `host_vm_deploy` role loops over a `vms` list; per-VM resources (disk copy, cloud-init ISO, libvirt domain) are created for each entry.
 
 ---
 
@@ -71,17 +64,16 @@ Caddy site domain and TLS cert/key paths are derived from `tailscale status --pe
 
 VMs are defined as a list in `group_vars/all.yml`. Each entry creates one libvirt domain.
 
-| Field | Required | Default | Notes |
-|---|---|---|---|
-| `name` | ✅ | — | VM hostname + libvirt domain name; must be unique |
+| Field | Required | Default | Notes                                                |
+|---|---|---|------------------------------------------------------|
+| `name` | ✅ | — | VM hostname + libvirt domain name; must be unique    |
 | `ip` | ✅ | — | Static IP on the libvirt NAT network (192.168.122.x) |
-| `ssh_public_key` | ✅ | — | SSH public key for `vm_vm_user` |
-| `disk_size` | | `20G` | Passed to `qemu-img resize` |
-| `memory_mib` | | `4096` | RAM in MiB |
-| `vcpus` | | `4` | vCPU count |
-| `network_iface` | | `enp1s0` | Guest NIC name (consistent for virtio-net) |
-
-The `vm_vm_user` global (default: `debian`) is the OS user provisioned inside every VM.
+| `ssh_public_key` | ✅ | — | SSH public key for `vm.user`                         |
+| `disk_size` | | `20G` | Passed to `qemu-img resize`                          |
+| `memory_mib` | | `4096` | RAM in MiB                                           |
+| `vcpus` | | `4` | vCPU count                                           |
+| `network_iface` | | `enp1s0` | Guest NIC name (consistent for virtio-net)           |
+| `user` | | `debian` | System user                                          |
 
 Secrets (`tailscale_auth_key`, passwords) are passed via `-e` at runtime — **never commit them**.
 
@@ -93,23 +85,23 @@ Secrets (`tailscale_auth_key`, passwords) are passed via `-e` at runtime — **n
 # Install Galaxy collections first
 ansible-galaxy collection install -r requirements.yml -p collections/
 
-# Host setup (Tailscale + optional Promtail)
+# Host setup (use --tags for user, ssh_hardening, libvirt, nftables, tailscale, promtail)
 ansible-playbook playbooks/host-setup.yml -e tailscale_auth_key=<key>
 
-# Deploy VM
+# Deploy VM (run host-setup with --tags libvirt first)
 ansible-playbook playbooks/vm-deploy.yml -e tailscale_auth_key=<key>
 
-# VM Caddy setup
-ansible-playbook playbooks/caddy.yml
+# Configure Caddy (and other VM config) on deployed VMs
+ansible-playbook playbooks/vm-setup.yml --tags caddy
 
-# Firewall
-ansible-playbook playbooks/firewall.yml
+# Firewall only (alternative to host-setup --tags nftables)
+ansible-playbook playbooks/firewall.yml --tags nftables
 ```
 
 Use `-C` (check mode) and `-D` (diff) to preview changes before applying:
 
 ```bash
-ansible-playbook playbooks/firewall.yml -C -D
+ansible-playbook playbooks/host-setup.yml -C -D
 ```
 
 ---
@@ -135,6 +127,8 @@ ansible-playbook playbooks/firewall.yml -C -D
 ### Linting
 
 ```bash
+# Install Galaxy collections first (ansible.posix required for host_setup nftables)
+ansible-galaxy collection install -r requirements.yml -p collections/
 # Requires ansible-lint
 ansible-lint
 ```
@@ -157,7 +151,7 @@ Fix any `yaml[truthy]`, `name[missing]`, or `no-changed-when` warnings before op
 - Avoid reusable Tailscale auth keys — a one-time ephemeral key prevents key extraction from a compromised VM.
 - `host_ssh_port` should be changed from 22 in production.
 - Caddy basic auth hash must be generated with `caddy hash-password`, never stored in plaintext.
-- The nftables role (`host_nftables`) is the host firewall — review the template in `roles/host_nftables/templates/nftables.conf.j2` before applying to any host.
+- The host firewall is in `host_setup` (tag `nftables`) — review `roles/host_setup/templates/nftables.conf.j2` before applying to any host.
 
 ---
 

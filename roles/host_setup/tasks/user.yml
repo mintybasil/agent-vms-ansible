@@ -1,8 +1,8 @@
 ---
-- name: "Ensure non-root host user is configured (optional)"
+- name: Ensure non-root host user is configured (optional)
   when: host_user_manage | bool
   block:
-    - name: "Ensure host user group and account exist"
+    - name: Ensure host user group and account exist
       ansible.builtin.user:
         name: "{{ host_user }}"
         groups: sudo
@@ -10,7 +10,7 @@
         create_home: true
         shell: /bin/bash
 
-    - name: "Ensure .ssh directory exists for host user"
+    - name: Ensure .ssh directory exists for host user
       ansible.builtin.file:
         path: "/home/{{ host_user }}/.ssh"
         state: directory
@@ -18,12 +18,12 @@
         group: "{{ host_user }}"
         mode: "0700"
 
-    - name: "Check for root authorized_keys file"
+    - name: Check for root authorized_keys file
       ansible.builtin.stat:
         path: /root/.ssh/authorized_keys
-      register: root_authorized_keys_stat
+      register: host_setup_root_authorized_keys_stat
 
-    - name: "Copy root's authorized_keys to host user"
+    - name: Copy root's authorized_keys to host user
       ansible.builtin.copy:
         src: /root/.ssh/authorized_keys
         dest: "/home/{{ host_user }}/.ssh/authorized_keys"
@@ -33,5 +33,4 @@
         remote_src: true
       when:
         - host_user_copy_root_authorized_keys | bool
-        - root_authorized_keys_stat.stat.exists
-
+        - host_setup_root_authorized_keys_stat.stat.exists

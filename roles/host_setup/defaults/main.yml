@@ -1,0 +1,26 @@
+---
+# --- host_user (optional non-root admin user) ---
+host_user_manage: false
+host_user: admin
+host_user_copy_root_authorized_keys: true
+
+# --- nftables ---
+vm_allowed_outbound_ports:
+  - 443  # HTTPS
+  - 41641 # Direct WireGuard (Tailscale)
+  - 3478 # STUN for NAT traversal
+
+# --- tailscale ---
+tailscale_up_extra_args: ""
+
+# --- promtail ---
+promtail_version: "3.0.0"
+promtail_arch: "amd64"
+promtail_scrape_journal: true
+promtail_positions_path: /var/lib/promtail/positions.yaml
+
+# --- SSH hardening (used by ssh_hardening task file) ---
+# PermitRootLogin: no, prohibit-password, or yes
+ssh_permit_root_login: "no"
+# PasswordAuthentication: no or yes
+ssh_password_authentication: "no"

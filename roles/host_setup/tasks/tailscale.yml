@@ -1,27 +1,38 @@
 ---
+- name: Check if tailscale is up and running
+  ansible.builtin.command:
+    cmd: tailscale status
+  register: host_setup_tailscale_status
+  changed_when: false
+  failed_when: false
+
 - name: Ensure keyrings directory exists
   ansible.builtin.file:
     path: /usr/share/keyrings
     state: directory
     mode: "0755"
+  when: host_setup_tailscale_status.rc != 0
 
 - name: Download Tailscale GPG key
   ansible.builtin.get_url:
     url: https://pkgs.tailscale.com/stable/debian/trixie.noarmor.gpg
     dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
     mode: '0644'
+  when: host_setup_tailscale_status.rc != 0
 
 - name: Download Tailscale APT repository file
   ansible.builtin.get_url:
     url: https://pkgs.tailscale.com/stable/debian/trixie.tailscale-keyring.list
     dest: /etc/apt/sources.list.d/tailscale.list
     mode: '0644'
+  when: host_setup_tailscale_status.rc != 0
 
 - name: Install Tailscale
   ansible.builtin.apt:
     name: tailscale
     state: present
     update_cache: true
+  when: host_setup_tailscale_status.rc != 0
 
 - name: Ensure Tailscale is started and enabled
   ansible.builtin.systemd:
@@ -29,10 +40,12 @@
     state: started
     enabled: true
     daemon_reload: true
+  when: host_setup_tailscale_status.rc != 0
 
 - name: Join Tailscale with auth key
   ansible.builtin.command:
     cmd: "tailscale up --authkey={{ tailscale_auth_key }} {{ tailscale_up_extra_args }}"
-  register: tailscale_up
-  changed_when: "'Success' in tailscale_up.stdout or tailscale_up.rc == 0"
+  register: host_setup_tailscale_up
+  changed_when: "'Success' in host_setup_tailscale_up.stdout or host_setup_tailscale_up.rc == 0"
   no_log: true
+  when: host_setup_tailscale_status.rc != 0

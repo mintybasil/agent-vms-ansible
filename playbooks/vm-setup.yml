@@ -1,0 +1,8 @@
+---
+- name: Setup VMs
+  hosts: openclaw_vms
+  become: true
+
+  roles:
+    - role: caddy
+      tags: [never, caddy]

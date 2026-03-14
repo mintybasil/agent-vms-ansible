@@ -1,0 +1,86 @@
+---
+- name: Check if promtail is running
+  ansible.builtin.command:
+    cmd: systemctl status promtail
+  register: host_setup_promtail_status
+  changed_when: false
+  failed_when: false
+
+- name: Create APT keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  when:
+    - promtail_enabled | default(false) | bool
+    - host_setup_promtail_status.rc != 0
+
+- name: Download Grafana GPG key
+  ansible.builtin.get_url:
+    url: https://apt.grafana.com/gpg.key
+    dest: /tmp/grafana.gpg.key
+    mode: '0644'
+  when:
+    - promtail_enabled | default(false) | bool
+    - host_setup_promtail_status.rc != 0
+
+- name: Dearmor Grafana GPG key
+  ansible.builtin.command:
+    cmd: gpg --dearmor -o /etc/apt/keyrings/grafana.gpg /tmp/grafana.gpg.key
+    creates: /etc/apt/keyrings/grafana.gpg
+  when:
+    - promtail_enabled | default(false) | bool
+    - host_setup_promtail_status.rc != 0
+
+- name: Add Grafana APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main"
+    state: present
+    filename: grafana
+  when:
+    - promtail_enabled | default(false) | bool
+    - host_setup_promtail_status.rc != 0
+
+- name: Install promtail package
+  ansible.builtin.apt:
+    name: promtail
+    state: present
+    update_cache: true
+  when:
+    - promtail_enabled | default(false) | bool
+    - host_setup_promtail_status.rc != 0
+
+- name: Ensure Promtail data directory exists
+  ansible.builtin.file:
+    path: /var/lib/promtail
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: promtail_enabled | default(false) | bool
+
+- name: Deploy Promtail config
+  ansible.builtin.template:
+    src: promtail-config.yml.j2
+    dest: /etc/promtail/config.yml
+    owner: root
+    group: root
+    mode: "0640"
+  when: promtail_enabled | default(false) | bool
+
+- name: Deploy Promtail systemd unit
+  ansible.builtin.template:
+    src: promtail.service.j2
+    dest: /etc/systemd/system/promtail.service
+    owner: root
+    group: root
+    mode: "0644"
+  when: promtail_enabled | default(false) | bool
+
+- name: Enable and start Promtail
+  ansible.builtin.systemd:
+    name: promtail
+    state: restarted
+    enabled: true
+    daemon_reload: true
+  when: promtail_enabled | default(false) | bool

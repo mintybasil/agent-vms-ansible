@@ -1,5 +1,5 @@
 ---
-- name: Deploy and setup VMs
+- name: Deploy VMs
   hosts: openclaw_host
   become: true
 

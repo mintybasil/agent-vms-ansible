@@ -3,9 +3,6 @@ vm_debian_cloud_image: debian-13-genericcloud-amd64.qcow2
 vm_debian_cloud_image_url: "https://cloud.debian.org/images/cloud/trixie/latest/{{ vm_debian_cloud_image }}"
 vm_cloud_init_base_path: "/root/cloud-init"
 
-# Default OS user provisioned inside each VM via cloud-init.
-vm_vm_user: debian
-
 # VM definitions. Each entry creates one libvirt domain with its own disk image,
 # cloud-init seed ISO, and network interface. The base Debian cloud image is
 # downloaded once and copied per VM — do not put the cloud image itself here.
@@ -13,7 +10,7 @@ vm_vm_user: debian
 # Required per VM:
 #   name           - VM hostname and libvirt domain name (must be unique)
 #   ip             - Static IP on the libvirt NAT network (192.168.122.x)
-#   ssh_public_key - SSH public key for vm_vm_user
+#   ssh_public_key - SSH public key for vm.user
 #
 # Optional per VM (defaults shown):
 #   disk_size      - Disk size passed to qemu-img resize   (default: 20G)
@@ -30,3 +27,4 @@ vms:
     memory_mib: 4096
     vcpus: 4
     network_iface: enp1s0
+    user: debian
