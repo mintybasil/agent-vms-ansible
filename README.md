@@ -28,21 +28,30 @@ Hardened VM deployments for OpenClaw.
     ```shell
     ansible-playbook playbooks/host-setup.yml --tags user -e ansible_user=root
     ```
-5. SSH into the host and set a strong password,
+5. SSH as `root` and set a strong password (`passwd <user>`),
 
 ## Step 2 - Setup Tailscale on Host
 > Visit [tailscale.com/admin/settings/keys](https://tailscale.com/admin/settings/keys) to create an Auth Key.
 1. Install and configure Tailscale
     ```shell
-    ansible-playbook playbooks/host-setup.yml --tags tailscale -e tailscale_auth_key=<key>
+    ansible-playbook playbooks/host-setup.yml --tags tailscale -e tailscale_auth_key=<key> --ask-become-pass
     ```
-2. Update `hosts.yml` to use the Tailscale IP/Hostname of the host machine
+2. Update `hosts.yml` to use the Tailscale IP/Hostname of the host machine.
+
+## Step 3 - Deploy Firewall
+1. Review [default allowed ports](/roles/host_nftables/defaults/main.yml).
+2. Run nftables:
+   ```shell
+   ansible-playbook playbooks/firewall-setup.yml --ask-become-pass
+   ```
+3. (Recommended) Review external firewall to ensure minimal ports are open.
 
 ##  Step 3 - Deploy VM
-1. Define VM config in `inventory/group_vars/all.yml`
+1. Define a new VM config in `inventory/group_vars/all.yml`
+2. Acquire another Tailscale auth key (**WARNING: key will remain in VM and could become compromised. Avoid reusable keys, if possible.**)
 2. Configure and deploy VM
     ```shell
-   ansible-playbook playbooks/host-deploy.yml 
+   ansible-playbook playbooks/vm-deploy.yml -e tailscale_auth_key=<key> --ask-become-pass
     ```
 
 ## Optional - Promtail

@@ -96,7 +96,7 @@ ansible-galaxy collection install -r requirements.yml -p collections/
 ansible-playbook playbooks/host-setup.yml -e tailscale_auth_key=<key>
 
 # Deploy VM
-ansible-playbook playbooks/host-deploy.yml -e tailscale_auth_key=<key>
+ansible-playbook playbooks/vm-deploy.yml -e tailscale_auth_key=<key>
 
 # VM app setup (Caddy)
 ansible-playbook playbooks/vm-setup.yml

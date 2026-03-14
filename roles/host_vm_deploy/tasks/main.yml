@@ -71,7 +71,7 @@
     group: root
     mode: "0755"
 
-# The base cloud image is downloaded once and shared — each VM gets its own copy.
+# The base cloud image is downloaded once and re-used — each VM gets its own copy.
 - name: Check if Debian cloud image exists
   ansible.builtin.stat:
     path: "{{ vm_image_dir }}/{{ vm_debian_cloud_image }}"
