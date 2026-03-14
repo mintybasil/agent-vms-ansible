@@ -1,7 +1,0 @@
----
-- name: Deploy VM on host machine
-  hosts: openclaw_host
-  become: true
-
-  roles:
-    - role: host_vm_deploy

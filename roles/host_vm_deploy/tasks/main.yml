@@ -1,66 +1,4 @@
 ---
-- name: Install KVM, libvirt, cloud-init packages
-  ansible.builtin.apt:
-    name:
-      - qemu-kvm
-      - qemu-utils
-      - libvirt-daemon-system
-      - libvirt-clients
-      - bridge-utils
-      - virt-install
-      - cloud-image-utils
-      - python3-lxml
-    state: present
-    update_cache: true
-
-- name: Define libvirt default network
-  ansible.builtin.command:
-    cmd: virsh net-define /dev/stdin
-    stdin: "{{ lookup('file', 'network.xml') }}"
-
-  register: net_define
-  changed_when: net_define.rc == 0
-  failed_when: net_define.rc != 0 and 'already exists' not in net_define.stderr
-
-- name: Start libvirt default network
-  ansible.builtin.command:
-    cmd: virsh net-start default
-  register: virsh_net_start
-  changed_when: false
-  failed_when: virsh_net_start.rc != 0 and 'already active' not in (virsh_net_start.stderr | default(''))
-
-- name: Set libvirt default network to autostart
-  ansible.builtin.command:
-    cmd: virsh net-autostart default
-  register: virsh_net_autostart
-  changed_when: false
-  failed_when: virsh_net_autostart.rc != 0
-
-- name: Ensure libvirtd is running
-  ansible.builtin.systemd:
-    name: libvirtd
-    state: started
-    enabled: true
-
-- name: Check if default pool exists
-  community.libvirt.virt_pool:
-    command: list_pools
-  register: pools
-
-- name: Create default pool if missing
-  community.libvirt.virt_pool:
-    name: default
-    state: present
-    xml: "{{ lookup('file', 'pool.xml') }}"
-  when: "'default' not in pools.list_pools"
-
-- name: Ensure default pool is active and autostarts
-  when: "'default' not in pools.list_pools"
-  community.libvirt.virt_pool:
-    name: default
-    state: active
-    autostart: true
-
 - name: Ensure libvirt images directory exists
   ansible.builtin.file:
     path: "{{ vm_image_dir | dirname }}"
@@ -69,98 +7,23 @@
     group: root
     mode: "0755"
 
-# --- Setup base image (Debian cloud)
-
-- name: Check if debian cloud image exists
+# The base cloud image is downloaded once and re-used — each VM gets its own copy.
+- name: Check if Debian cloud image exists
   ansible.builtin.stat:
     path: "{{ vm_image_dir }}/{{ vm_debian_cloud_image }}"
   register: cloud_image_stat
 
-- name: Fetch cloud image
-  when: cloud_image_stat.stat.exists == false
+- name: Fetch Debian cloud image
   ansible.builtin.get_url:
     url: "{{ vm_debian_cloud_image_url }}"
     dest: "{{ vm_image_dir }}"
+  when: not cloud_image_stat.stat.exists
 
-# --- Create persistent disk image from base
+# ── Per-VM provisioning ────────────────────────────────────────────────────────
 
-- name: Check if persistent disk image exists
-  ansible.builtin.stat:
-    path: "{{ vm_image_dir }}/{{ vm_disk_image }}"
-  register: vm_disk_image_stat
-
-- name: Create persistent disk image
-  when: vm_disk_image_stat.stat.exists == false
-  ansible.builtin.command:
-    chdir: "{{ vm_image_dir }}"
-    cmd: "qemu-img convert -f qcow2 -O qcow2 {{ vm_debian_cloud_image }} {{ vm_disk_image }}"
-
-- name: Resize persistent disk image
-  when: vm_disk_image_stat.stat.exists == false
-  ansible.builtin.command:
-    chdir: "{{ vm_image_dir }}"
-    cmd: "qemu-img resize {{ vm_disk_image }} {{ vm_disk_size }}"
-
-# --- Setup cloud init
-- name: Check if seed image exists
-  ansible.builtin.stat:
-    path: "{{ vm_image_dir }}/{{ vm_seed_iso }}"
-  register: seed_img_stat
-
-- name: Ensure cloud init config path exists
-  when: seed_img_stat.stat.exists == false
-  ansible.builtin.file:
-    path: "{{ vm_cloud_init_config_path }}"
-    state: directory
-
-- name: Ensure cloud init user-data file exists
-  when: seed_img_stat.stat.exists == false
-  ansible.builtin.template:
-    src: user-data
-    dest: "{{ vm_cloud_init_config_path }}"
-    owner: root
-    group: root
-
-- name: Ensure cloud init meta-data file exists
-  when: seed_img_stat.stat.exists == false
-  ansible.builtin.template:
-    src: meta-data
-    dest: "{{ vm_cloud_init_config_path }}"
-    owner: root
-    group: root
-
-- name: Ensure cloud init network-config file exists
-  when: seed_img_stat.stat.exists == false
-  ansible.builtin.template:
-    src: network-config
-    dest: "{{ vm_cloud_init_config_path }}"
-    owner: root
-    group: root
-
-- name: Build the cloud init ISO
-  when: seed_img_stat.stat.exists == false
-  ansible.builtin.command:
-    cmd: "cloud-localds {{ vm_image_dir }}/{{ vm_seed_iso }} {{ vm_cloud_init_config_path }}/user-data {{ vm_cloud_init_config_path }}/meta-data --network-config {{ vm_cloud_init_config_path }}/network-config"
-    creates: "{{ vm_image_dir }}/{{ vm_seed_iso }}"
-
-# --- Create VM
-
-- name: Check defined vms
-  community.libvirt.virt:
-    command: list_vms
-  register: all_vms
-
-- name: Define VM from XML template
-  community.libvirt.virt:
-    command: define
-    xml: "{{ lookup('template', 'vm.xml.j2') }}"
-  when: vm_vm_name not in all_vms.list_vms
-
-- name: Ensure VM is running
-  community.libvirt.virt:
-    name: "{{ vm_vm_name }}"
-    state: running
-
-- name: Enable auto-boot
-  ansible.builtin.command:
-    cmd: "virsh autostart {{ vm_vm_name }}"
+- name: Deploy each VM
+  ansible.builtin.include_tasks: deploy_vm.yml
+  loop: "{{ vms }}"
+  loop_control:
+    loop_var: vm
+    label: "{{ vm.name }}"

@@ -1,8 +1,8 @@
 <domain type='kvm'>
-    <name>{{ vm_vm_name }}</name>
-    <memory unit='MiB'>4096</memory>
-    <currentMemory unit='MiB'>4096</currentMemory>
-    <vcpu placement='static'>4</vcpu>
+    <name>{{ vm.name }}</name>
+    <memory unit='MiB'>{{ vm.memory_mib | default(4096) }}</memory>
+    <currentMemory unit='MiB'>{{ vm.memory_mib | default(4096) }}</currentMemory>
+    <vcpu placement='static'>{{ vm.vcpus | default(4) }}</vcpu>
 
     <os>
         <type arch='x86_64' machine='q35'>hvm</type>
@@ -17,21 +17,21 @@
     <cpu mode='host-passthrough'/>
 
     <devices>
-        <!-- Primary disk -->
+        <!-- Primary disk: VM-specific copy of the base cloud image -->
         <disk type='file' device='disk'>
             <driver name='qemu' type='qcow2'/>
-            <source file='{{ vm_image_dir }}/{{ vm_disk_image }}'/>
+            <source file='{{ vm_image_dir }}/{{ _vm_disk_image }}'/>
             <target dev='vda' bus='virtio'/>
         </disk>
-        <!-- Cloud-init seed ISO -->
+        <!-- Cloud-init seed ISO: VM-specific -->
         <disk type='file' device='cdrom'>
             <driver name='qemu' type='raw'/>
-            <source file='{{ vm_image_dir }}/{{ vm_seed_iso }}'/>
+            <source file='{{ vm_image_dir }}/{{ _vm_seed_iso }}'/>
             <target dev='sda' bus='sata'/>
             <readonly/>
         </disk>
 
-        <!-- Network -->
+        <!-- Network: shared libvirt default NAT network -->
         <interface type='network'>
             <source network='default'/>
             <model type='virtio'/>

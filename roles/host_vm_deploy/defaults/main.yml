@@ -1,8 +1,30 @@
 vm_image_dir: /var/lib/libvirt/images/
 vm_debian_cloud_image: debian-13-genericcloud-amd64.qcow2
 vm_debian_cloud_image_url: "https://cloud.debian.org/images/cloud/trixie/latest/{{ vm_debian_cloud_image }}"
-vm_cloud_init_config_path: "/root/cloud-init"
-vm_vm_name: "openclaw-vm"
-vm_disk_image: "{{ vm_vm_name }}-{{ vm_debian_cloud_image }}"
-vm_seed_iso: "{{ vm_vm_name }}-seed.iso"
-vm_disk_size: "20G"
+vm_cloud_init_base_path: "/root/cloud-init"
+
+# VM definitions. Each entry creates one libvirt domain with its own disk image,
+# cloud-init seed ISO, and network interface. The base Debian cloud image is
+# downloaded once and copied per VM — do not put the cloud image itself here.
+#
+# Required per VM:
+#   name           - VM hostname and libvirt domain name (must be unique)
+#   ip             - Static IP on the libvirt NAT network (192.168.122.x)
+#   ssh_public_key - SSH public key for vm.user
+#
+# Optional per VM (defaults shown):
+#   disk_size      - Disk size passed to qemu-img resize   (default: 20G)
+#   memory_mib     - RAM in MiB                            (default: 4096)
+#   vcpus          - vCPU count                            (default: 4)
+#   network_iface  - Guest NIC name seen inside the VM     (default: enp1s0)
+#
+# Single-VM default — override in group_vars/all.yml or host_vars/.
+vms:
+  - name: openclaw-vm
+    ip: ""
+    ssh_public_key: ""
+    disk_size: 20G
+    memory_mib: 4096
+    vcpus: 4
+    network_iface: enp1s0
+    user: debian

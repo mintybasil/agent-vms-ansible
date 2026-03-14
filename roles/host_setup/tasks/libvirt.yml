@@ -1,0 +1,62 @@
+---
+- name: Install KVM, libvirt, cloud-init packages
+  ansible.builtin.apt:
+    name:
+      - qemu-kvm
+      - qemu-utils
+      - libvirt-daemon-system
+      - libvirt-clients
+      - bridge-utils
+      - virt-install
+      - cloud-image-utils
+      - python3-lxml
+    state: present
+    update_cache: true
+
+- name: Define libvirt default network
+  ansible.builtin.command:
+    cmd: virsh net-define /dev/stdin
+    stdin: "{{ lookup('file', 'network.xml') }}"
+  register: net_define
+  changed_when: net_define.rc == 0
+  failed_when: net_define.rc != 0 and 'already exists' not in net_define.stderr
+
+- name: Start libvirt default network
+  ansible.builtin.command:
+    cmd: virsh net-start default
+  register: virsh_net_start
+  changed_when: false
+  failed_when: virsh_net_start.rc != 0 and 'already active' not in (virsh_net_start.stderr | default(''))
+
+- name: Set libvirt default network to autostart
+  ansible.builtin.command:
+    cmd: virsh net-autostart default
+  register: virsh_net_autostart
+  changed_when: false
+  failed_when: virsh_net_autostart.rc != 0
+
+- name: Ensure libvirtd is running
+  ansible.builtin.systemd:
+    name: libvirtd
+    state: started
+    enabled: true
+
+# The storage pool is shared across all VMs — images are distinguished by name.
+- name: Check if default pool exists
+  community.libvirt.virt_pool:
+    command: list_pools
+  register: pools
+
+- name: Create default pool if missing
+  community.libvirt.virt_pool:
+    name: default
+    state: present
+    xml: "{{ lookup('file', 'pool.xml') }}"
+  when: "'default' not in pools.list_pools"
+
+- name: Ensure default pool is active and autostarts
+  community.libvirt.virt_pool:
+    name: default
+    state: active
+    autostart: true
+  when: "'default' not in pools.list_pools"

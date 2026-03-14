@@ -4,5 +4,4 @@
   become: true
 
   roles:
-    - role: host_tailscale
-    - role: host_promtail
+    - role: host_setup # Role defines tags for each set of tasks. See role for available tags

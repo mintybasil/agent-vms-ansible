@@ -1,7 +1,7 @@
 ---
-- name: Configure firewall
+- name: Deploy VMs
   hosts: openclaw_host
   become: true
 
   roles:
-    - role: host_nftables
+    - role: host_vm_deploy

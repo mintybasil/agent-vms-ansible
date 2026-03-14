@@ -1,0 +1,28 @@
+---
+- name: Set SSH port in sshd_config
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?Port\s+'
+    line: "Port {{ host_ssh_port }}"
+    state: present
+
+- name: Set PermitRootLogin in sshd_config
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitRootLogin\s+'
+    line: "PermitRootLogin {{ ssh_permit_root_login }}"
+    state: present
+
+- name: Set PasswordAuthentication in sshd_config
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PasswordAuthentication\s+'
+    line: "PasswordAuthentication {{ ssh_password_authentication }}"
+    state: present
+
+# Restart sshd so running service matches config. Explicit task ensures restart
+# even when lineinfile reported "ok" (file already correct), so handler would not run.
+- name: Restart sshd to apply config
+  ansible.builtin.systemd:
+    name: ssh
+    state: restarted

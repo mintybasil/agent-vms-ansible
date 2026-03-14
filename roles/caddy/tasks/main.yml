@@ -6,6 +6,14 @@
   changed_when: false
   failed_when: false
 
+- name: Ensure /etc/caddy exists
+  ansible.builtin.file:
+    path: /etc/caddy
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
 - name: Install Caddy GPG key
   when: caddy_status.rc != 0
   ansible.builtin.shell: |
@@ -27,6 +35,74 @@
     name: caddy
     state: present
     update_cache: true
+
+- name: Get Tailscale cert domain from status
+  ansible.builtin.command:
+    cmd: tailscale status --peers=false --json
+  register: caddy_tailscale_status
+  changed_when: false
+
+- name: Set Tailscale cert domain and paths from status
+  ansible.builtin.set_fact:
+    caddy_tailscale_status_json: "{{ caddy_tailscale_status.stdout | from_json }}"
+  when: (caddy_tailscale_status.stdout | from_json).CertDomains | length > 0
+
+- name: Fail when Tailscale CertDomains is empty
+  ansible.builtin.fail:
+    msg: "Tailscale status has no CertDomains; ensure Tailscale is up and the node has a cert domain."
+  when: (caddy_tailscale_status.stdout | from_json).CertDomains | length == 0
+
+- name: Set Tailscale cert domain and TLS paths
+  ansible.builtin.set_fact:
+    caddy_tailscale_cert_domain: "{{ caddy_tailscale_status_json.CertDomains[0] }}"
+    caddy_tls_cert_path: "/etc/caddy/{{ caddy_tailscale_status_json.CertDomains[0] }}.crt"
+    caddy_tls_key_path: "/etc/caddy/{{ caddy_tailscale_status_json.CertDomains[0] }}.key"
+  when: caddy_tailscale_status_json is defined
+
+- name: Stat Tailscale cert and key files
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  register: caddy_tls_files_stat
+  loop:
+    - "{{ caddy_tls_cert_path }}"
+    - "{{ caddy_tls_key_path }}"
+
+- name: Generate Tailscale TLS cert and key
+  when: not caddy_tls_files_stat.results[0].stat.exists or not caddy_tls_files_stat.results[1].stat.exists
+  notify: Reload Caddy
+  block:
+    - name: Run tailscale cert to write cert and key to /etc/caddy
+      ansible.builtin.command:
+        cmd: >
+          tailscale cert
+          --cert-file={{ caddy_tls_cert_path }}
+          --key-file={{ caddy_tls_key_path }}
+          {{ caddy_tailscale_cert_domain }}
+      register: caddy_tailscale_cert_result
+      changed_when: caddy_tailscale_cert_result.rc == 0
+
+    - name: Set ownership of Tailscale cert and key for Caddy
+      ansible.builtin.file:
+        path: "{{ item }}"
+        owner: root
+        group: caddy
+        mode: "0640"
+      loop:
+        - "{{ caddy_tls_cert_path }}"
+        - "{{ caddy_tls_key_path }}"
+
+- name: Re-stat Tailscale cert and key after generation
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  register: caddy_tls_files_stat_final
+  loop:
+    - "{{ caddy_tls_cert_path }}"
+    - "{{ caddy_tls_key_path }}"
+
+- name: Fail if Tailscale cert or key are missing before deploying Caddyfile
+  ansible.builtin.fail:
+    msg: "Tailscale cert {{ caddy_tls_cert_path }} or key {{ caddy_tls_key_path }} missing; ensure Tailscale is up and run without check mode to generate."
+  when: not caddy_tls_files_stat_final.results[0].stat.exists or not caddy_tls_files_stat_final.results[1].stat.exists
 
 - name: Deploy Caddyfile
   ansible.builtin.template:

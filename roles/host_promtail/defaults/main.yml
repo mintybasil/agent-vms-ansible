@@ -1,7 +1,0 @@
-# Promtail version (from grafana/loki releases; Promtail is bundled)
-promtail_version: "3.0.0"
-promtail_arch: "amd64"
-
-# Optional: extra scrape config (e.g. systemd journal)
-promtail_scrape_journal: true
-promtail_positions_path: /var/lib/promtail/positions.yaml

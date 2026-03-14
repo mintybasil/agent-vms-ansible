@@ -24,6 +24,7 @@ SWRAIDLEVEL 0
 # Partitions: /boot 512M, rest in LVM (swap 8G, then root gets remainder)
 # installimage requires the LV with size "all" to be the last LV in the VG
 PART /boot ext4 512M
+# For UEFI systems: PART /boot/efi esp 256M
 PART lvm vg0 all
 
 LV vg0 swap swap swap 8G
