@@ -64,7 +64,8 @@ Two host groups:
 | `promtail_enabled` | group_vars/all.yml | Set `true` to enable log shipping |
 | `caddy_basicauth_user` | group_vars/all.yml | Basic auth username for Caddy |
 | `caddy_basicauth_hash` | group_vars/all.yml | Bcrypt hash via `caddy hash-password` |
-| `caddy_tailnet_domain` | group_vars/all.yml | Tailscale MagicDNS domain (`*.ts.net`) |
+
+Caddy site domain and TLS cert/key paths are derived from `tailscale status --peers=false --json` (field `CertDomains`); no extra vars required.
 
 ### VM list (`vms`)
 
@@ -98,17 +99,17 @@ ansible-playbook playbooks/host-setup.yml -e tailscale_auth_key=<key>
 # Deploy VM
 ansible-playbook playbooks/vm-deploy.yml -e tailscale_auth_key=<key>
 
-# VM app setup (Caddy)
-ansible-playbook playbooks/vm-setup.yml
+# VM Caddy setup
+ansible-playbook playbooks/caddy.yml
 
 # Firewall
-ansible-playbook playbooks/firewall-setup.yml
+ansible-playbook playbooks/firewall.yml
 ```
 
 Use `-C` (check mode) and `-D` (diff) to preview changes before applying:
 
 ```bash
-ansible-playbook playbooks/firewall-setup.yml -C -D
+ansible-playbook playbooks/firewall.yml -C -D
 ```
 
 ---

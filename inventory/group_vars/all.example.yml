@@ -37,5 +37,3 @@ vms:
 caddy_basicauth_user:
 # Use `caddy hash-password` - https://caddyserver.com/docs/command-line#caddy-hash-password
 caddy_basicauth_hash:
-# Tailscale MagicDNS of the VM
-caddy_tailnet_domain: "*.ts.net"

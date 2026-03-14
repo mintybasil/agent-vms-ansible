@@ -3,13 +3,13 @@
 Hardened VM deployments for OpenClaw.
 
 # Features
-- Tailscale setup on host and inside VMs
-- Promtail setup for log collection
+- Tailscale setup on host and in VMs
 - Firewall configuration on host and VMs
-- Caddy proxy for authenticated access to APIs
+- Caddy proxy for authenticated access to API in VM, via HTTPs
 - Minimal OpenClaw config for quick start
+- Promtail setup for log collection
 
-# How To Use
+# Usage
 
 ## Requirements
 - Host with fresh Debian 13 install
@@ -42,17 +42,31 @@ Hardened VM deployments for OpenClaw.
 1. Review [default allowed ports](/roles/host_nftables/defaults/main.yml).
 2. Run nftables:
    ```shell
-   ansible-playbook playbooks/firewall-setup.yml --ask-become-pass
+   ansible-playbook playbooks/firewall.yml --ask-become-pass
    ```
 3. (Recommended) Review external firewall to ensure minimal ports are open.
 
-##  Step 3 - Deploy VM
+##  Step 4 - Deploy VM
 1. Define a new VM config in `inventory/group_vars/all.yml`
 2. Acquire another Tailscale auth key (**WARNING: key will remain in VM and could become compromised. Avoid reusable keys, if possible.**)
-2. Configure and deploy VM
+3. Configure and deploy VM
     ```shell
    ansible-playbook playbooks/vm-deploy.yml -e tailscale_auth_key=<key> --ask-become-pass
     ```
+4. Verify you can SSH into VM via Tailscale
+5. Ensure hosts.yml includes the VM
+
+## Step 5 - Caddy
+1. Set `caddy_basicauth_user` and `caddy_basicauth_hash`
+2. Deploy Caddy with Tailscale HTTPS:
+```shell
+   ansible-playbook playbooks/caddy.yml
+```
+3. Confirm authentication works on `https://<tailscale_hostname>`
+
+## Step 6 - Install OpenClaw
+> Note: Installation is not automated as the OpenClaw interactive setup is quite useful
+1. SSH into the VM and run the install script (https://docs.openclaw.ai/install)
 
 ## Optional - Promtail
 1. Set `promtail_enabled` (true/false)
