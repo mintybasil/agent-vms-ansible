@@ -1,18 +1,16 @@
 all:
-  children:
     # The bare-metal KVM host. Only one entry expected here.
-    openclaw_host:
-      hosts:
-        my-kvm-host:
-          ansible_host: ""        # IP or hostname of the KVM host
-          ansible_user: "{{ host_user }}"
+    hosts:
+      openclaw-host:
+        ansible_host: "" # IP or hostname of the KVM host
+        ansible_user: "{{ host_user }}"
 
     # One entry per VM. Add more hosts here for multiple VMs.
     # ansible_host should be the Tailscale IP/hostname after initial provisioning.
-    openclaw_vm:
+    openclaw_vms:
       hosts:
         openclaw-vm-1:
-          ansible_host: ""        # Tailscale IP or MagicDNS hostname
+          ansible_host: "" # Tailscale IP or MagicDNS hostname
           ansible_user: "{{ vm_vm_user }}"
         # openclaw-vm-2:
         #   ansible_host: ""

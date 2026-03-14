@@ -4,5 +4,9 @@
   become: true
 
   roles:
+    - role: host_user
+      tags: [never, user]
     - role: host_tailscale
+      tags: [never, tailscale]
     - role: host_promtail
+      tags: [never, promtail]

@@ -21,7 +21,7 @@ ansible.cfg         # Project-level Ansible config
 |---|---|---|
 | `host-setup.yml` | `openclaw_host` | Install Tailscale + Promtail on bare metal host |
 | `host-deploy.yml` | `openclaw_host` | Provision KVM VM via cloud-init |
-| `vm-setup.yml` | `openclaw_vm` | Configure Caddy inside the VM |
+| `vm-setup.yml` | `openclaw_vms` | Configure Caddy inside the VM |
 | `firewall-setup.yml` | `openclaw_host` | Apply nftables firewall rules to host |
 
 ### Roles
@@ -49,7 +49,7 @@ for each entry in the list.
 
 Two host groups:
 - `openclaw_host` — the bare metal Debian 13 machine running KVM
-- `openclaw_vm` — the VM running OpenClaw
+- `openclaw_vms` — the VM running OpenClaw
 
 ---
 
