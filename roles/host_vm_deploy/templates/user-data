@@ -18,6 +18,8 @@ packages:
   - curl
   - ca-certificates
   - gpg
+  - git
+  - htop
 
 write_files:
   - path: /usr/local/bin/setup-tailscale.sh
