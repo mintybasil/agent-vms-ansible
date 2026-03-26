@@ -1,6 +1,6 @@
 ---
 - name: Manage VMs
-  hosts: agent_host
+  hosts: agent-host
   become: true
 
   roles:

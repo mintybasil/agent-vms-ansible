@@ -19,8 +19,8 @@ ansible.cfg         # Project-level Ansible config
 
 | Playbook | Target       | Purpose |
 |---|--------------|---|
-| `host-setup.yml` | `agent_host` | User, SSH hardening, libvirt, nftables, Tailscale, Promtail (use `--tags` to run specific parts) |
-| `vm-deploy.yml` | `agent_host` | Provision KVM VM via cloud-init (requires libvirt from host-setup) |
+| `host-setup.yml` | `agent-host` | User, SSH hardening, libvirt, nftables, Tailscale, Promtail (use `--tags` to run specific parts) |
+| `vm-deploy.yml` | `agent-host` | Provision KVM VM via cloud-init (requires libvirt from host-setup) |
 | `vm-setup.yml` | `agent_vms`  | Configure Caddy (and other VM-level config) inside the VM; use `--tags caddy` for Caddy only |
 ### Roles
 
@@ -39,9 +39,9 @@ One-time host resources (packages, libvirt `default` NAT network, storage pool, 
 
 - `inventory/hosts.yml` — **gitignored**, contains host and VM variables plus real IPs/hostnames. Copy from `hosts.example.yml`.
 
-Two host groups:
-- `agent_host` — the bare metal Debian 13 machine running KVM
-- `agent_vms` — the VM running the agent
+Two host types:
+- `agent-host` — the bare metal Debian 13 machine running KVM
+- `agent_vms` — the group of VMs running the agent
 
 ---
 

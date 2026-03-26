@@ -1,6 +1,6 @@
 all:
   hosts:
-    agent_host:
+    agent-host:
       ansible_host: "" # IP or hostname of the KVM host
       ansible_user: "{{ host_user }}"
       host_user: "admin" # Host user, optionally created
