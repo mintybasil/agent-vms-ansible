@@ -9,7 +9,7 @@ This repo contains Ansible automation for deploying **hardened VMs running OpenC
 ```
 playbooks/          # Top-level playbooks (entry points)
 roles/              # Reusable Ansible roles
-inventory/          # Hosts and group_vars (hosts.yml is gitignored)
+inventory/          # Inventory files (hosts.yml is gitignored)
 docs/               # Setup guides and reference configs
 requirements.yml    # Ansible Galaxy collections
 ansible.cfg         # Project-level Ansible config
@@ -37,8 +37,7 @@ One-time host resources (packages, libvirt `default` NAT network, storage pool, 
 
 ## Inventory
 
-- `inventory/hosts.yml` — **gitignored**, contains real IPs/hostnames. Copy from `hosts.example.yml`.
-- `inventory/group_vars/all.example.yml` — copy to `all.yml`, fill in required vars.
+- `inventory/hosts.yml` — **gitignored**, contains host and VM variables plus real IPs/hostnames. Copy from `hosts.example.yml`.
 
 Two host groups:
 - `openclaw_host` — the bare metal Debian 13 machine running KVM
@@ -52,17 +51,17 @@ Two host groups:
 
 | Variable | Where | Notes |
 |---|---|---|
-| `host_user` | group_vars/all.yml | SSH user on host |
-| `host_ssh_port` | group_vars/all.yml | Default 22; change it |
-| `promtail_enabled` | group_vars/all.yml | Set `true` to enable log shipping |
-| `caddy_basicauth_user` | group_vars/all.yml | Basic auth username for Caddy |
-| `caddy_basicauth_hash` | group_vars/all.yml | Bcrypt hash via `caddy hash-password` |
+| `host_user` | inventory/hosts.yml | SSH user on host |
+| `host_ssh_port` | inventory/hosts.yml | Default 22; change it |
+| `promtail_enabled` | inventory/hosts.yml | Set `true` to enable log shipping |
+| `caddy_basicauth_user` | inventory/hosts.yml | Basic auth username for Caddy |
+| `caddy_basicauth_hash` | inventory/hosts.yml | Bcrypt hash via `caddy hash-password` |
 
 Caddy site domain and TLS cert/key paths are derived from `tailscale status --peers=false --json` (field `CertDomains`); no extra vars required.
 
 ### VM list (`vms`)
 
-VMs are defined as a list in `group_vars/all.yml`. Each entry creates one libvirt domain.
+VMs are defined as a list in `inventory/hosts.yml`. Each entry creates one libvirt domain.
 
 | Field | Required | Default | Notes                                                |
 |---|---|---|------------------------------------------------------|
@@ -88,8 +87,14 @@ ansible-galaxy collection install -r requirements.yml -p collections/
 # Host setup (use --tags for user, ssh_hardening, libvirt, nftables, tailscale, promtail)
 ansible-playbook playbooks/host-setup.yml -e tailscale_auth_key=<key>
 
-# Deploy VM (run host-setup with --tags libvirt first)
+# Deploy all VMs (run host-setup with --tags libvirt first)
 ansible-playbook playbooks/vm-deploy.yml -e tailscale_auth_key=<key>
+
+# Deploy one VM from `vms` by name
+ansible-playbook playbooks/vm-deploy.yml -e tailscale_auth_key=<key> -e vm_name=<name>
+
+# Destroy one VM (domain + per-VM artifacts)
+ansible-playbook playbooks/vm-deploy.yml -e vm_state=absent -e vm_name=<name>
 
 # Configure Caddy (and other VM config) on deployed VMs
 ansible-playbook playbooks/vm-setup.yml --tags caddy
@@ -114,7 +119,7 @@ ansible-playbook playbooks/host-setup.yml -C -D
 - **Defaults over hardcoding.** Variables belong in `roles/<role>/defaults/main.yml`, not hardcoded in tasks.
 - **Templates use Jinja2.** Template files live in `templates/` with a `.j2` extension.
 - **Handlers for service restarts.** Use `notify:` + handlers rather than restarting services directly in tasks.
-- **No secrets in repo.** Vault-encrypt or pass via `-e` at runtime. Check `inventory/group_vars/all.example.yml` for which vars are sensitive.
+- **No secrets in repo.** Vault-encrypt or pass via `-e` at runtime.
 
 ### Adding a New Role
 
@@ -122,7 +127,7 @@ ansible-playbook playbooks/host-setup.yml -C -D
 2. Add a `tasks/main.yml` as the entry point
 3. Add `defaults/main.yml` with sensible defaults and comments
 4. Wire it into the appropriate playbook under `roles:`
-5. Document new variables in `inventory/group_vars/all.example.yml`
+5. Document new variables in `inventory/hosts.example.yml`
 
 ### Linting
 
@@ -137,7 +142,7 @@ Fix any `yaml[truthy]`, `name[missing]`, or `no-changed-when` warnings before op
 
 ### PR Checklist
 
-- [ ] `all.example.yml` updated if new variables were added
+- [ ] `hosts.example.yml` updated if new variables were added
 - [ ] No secrets or real IPs committed
 - [ ] Handlers used for service restarts
 - [ ] New roles wired into a playbook
