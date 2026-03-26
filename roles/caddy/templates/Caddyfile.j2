@@ -12,7 +12,7 @@
       respond "Caddy is working, but the target service is currently unreachable." 503
   }
 
-  reverse_proxy 127.0.0.1:{{ caddy_proxy_port }} {
+  reverse_proxy {{ caddy_proxy_host }}:{{ caddy_proxy_port }} {
     header_up X-Forwarded-User {{ caddy_basicauth_user }}
   }
 }

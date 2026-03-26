@@ -91,7 +91,7 @@ Use these as `DRIVE1` and `DRIVE2` in the installimage config (e.g. `/dev/nvme0n
    - **Debian 13 (recommended):** `installimage/preset-debian13-raid0-nvme.txt`
    - **Debian 12 (fallback):** `installimage/preset-debian12-raid0-nvme.txt`  
    Or manually set at least:
-     - **HOSTNAME** — e.g. `openclaw-host`
+     - **HOSTNAME** — e.g. `agent-host`
      - **DRIVE1** — `/dev/nvme0n1` (or your first NVMe block device)
      - **DRIVE2** — `/dev/nvme1n1` (or your second NVMe block device)
      - **SWRAID** — `1` (enable software RAID)

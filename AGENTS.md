@@ -1,6 +1,6 @@
-# AGENTS.md — AI Agent Guide for openclaw-ansible
+# AGENTS.md — AI Agent Guide for agent-vms-ansible
 
-This repo contains Ansible automation for deploying **hardened VMs running OpenClaw** on a Debian 13 host. It covers host setup, VM provisioning, firewall config, Caddy reverse proxy, Tailscale networking, and optional Promtail log shipping.
+This repo contains Ansible automation for deploying **hardened VMs running agent frameworks** on a Debian 13 host. It covers host setup, VM provisioning, firewall config, Caddy reverse proxy, Tailscale networking, and optional Promtail log shipping.
 
 ---
 
@@ -17,11 +17,11 @@ ansible.cfg         # Project-level Ansible config
 
 ### Playbooks
 
-| Playbook | Target | Purpose |
-|---|---|---|
-| `host-setup.yml` | `openclaw_host` | User, SSH hardening, libvirt, nftables, Tailscale, Promtail (use `--tags` to run specific parts) |
-| `vm-deploy.yml` | `openclaw_host` | Provision KVM VM via cloud-init (requires libvirt from host-setup) |
-| `vm-setup.yml` | `openclaw_vms` | Configure Caddy (and other VM-level config) inside the VM; use `--tags caddy` for Caddy only |
+| Playbook | Target       | Purpose |
+|---|--------------|---|
+| `host-setup.yml` | `agent-host` | User, SSH hardening, libvirt, nftables, Tailscale, Promtail (use `--tags` to run specific parts) |
+| `vm-deploy.yml` | `agent-host` | Provision KVM VM via cloud-init (requires libvirt from host-setup) |
+| `vm-setup.yml` | `agent_vms`  | Configure Caddy (and other VM-level config) inside the VM; use `--tags caddy` for Caddy only |
 ### Roles
 
 | Role | Purpose |
@@ -39,9 +39,9 @@ One-time host resources (packages, libvirt `default` NAT network, storage pool, 
 
 - `inventory/hosts.yml` — **gitignored**, contains host and VM variables plus real IPs/hostnames. Copy from `hosts.example.yml`.
 
-Two host groups:
-- `openclaw_host` — the bare metal Debian 13 machine running KVM
-- `openclaw_vms` — the VM running OpenClaw
+Two host types:
+- `agent-host` — the bare metal Debian 13 machine running KVM
+- `agent_vms` — the group of VMs running the agent
 
 ---
 

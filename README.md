@@ -1,19 +1,29 @@
-# OpenClaw VM Deployments
+# Agent VMs
 
-Hardened VM deployments for OpenClaw.
+Hardened VM deployments for running agents.
 
 # Features
-- Tailscale setup on host and in VMs
-- Firewall configuration on host and VMs
-- Caddy proxy for authenticated access to APIs in VM, via HTTPs
-- Minimal OpenClaw config for quick start
+- Create/destroy multiple VMs
+- Tailscale setup for host and VMs
+- Host firewall (nftables)
+- Caddy proxy for authenticated access to APIs in VM (via Tailscale HTTPs)
 - Promtail setup for log collection
+
+# Table of Contents
+- [Usage](#usage)
+  - [Requirements](#requirements)
+  - [Host Setup](#host-setup)
+  - [Deploying/Updating VMs](#deployingupdating-vms)
+  - [Configuring VMs](#configuring-vms)
+  - [Destroying VMs](#destroying-vms)
+- [Additional Notes](#additional-notes)
+  - [Tailscale ACL Setup](#tailscale-acl-setup)
 
 # Usage
 
 ## Requirements
 - Host with fresh Debian 13 install
-- Tailscale account (+ auth key) with HTTPs enabled
+- Tailscale account (+ auth keys) with HTTPs enabled
 - `inventory/hosts.yml` is set with the IP/hostname of your host machine
 
 ## Host Setup
@@ -85,7 +95,7 @@ Hardened VM deployments for OpenClaw.
 5. Verify VM(s) are reachable via Tailscale SSH after boot
 6. Ensure `inventory/hosts.yml` includes VM host entries you want to configure with VM-level playbooks
 
-## Configuring VM (Caddy + OpenClaw)
+## Configuring VMs
 
 ### Caddy
 1. Set `caddy_basicauth_user` and `caddy_basicauth_hash`
@@ -96,11 +106,6 @@ Hardened VM deployments for OpenClaw.
    ansible-playbook playbooks/vm-setup.yml --tags caddy --limit <host>
    ```
 3. Confirm authentication works on `https://<vm_tailscale_hostname>`
-
-### OpenClaw
-> Installation is not automated yet because interactive setup is useful.
-
-1. SSH into the VM and run the install script: [https://docs.openclaw.ai/install](https://docs.openclaw.ai/install)
 
 ## Destroying VMs
 
@@ -117,25 +122,25 @@ It is **strongly** recommended to ensure your Tailscale ACL configuration is set
 
 ### Option 1: Personal Devices -> Host/VM
 
-Create two tags - `personal` and `openclaw`. Assign `personal` to devices you use to access the host/VM. Assign `openclaw` to the host/VM (can be done when generating auth key).
+Create two tags - `personal` and `agents`. Assign `personal` to devices you use to access the host/VM. Assign `agents` to the host/VM (can be done when generating auth key).
 
 Apply an ACL rule:
 ```json
 {
     "src": ["tag:personal"],
-    "dst": ["tag:zeroklaw"],
+    "dst": ["tag:agents"],
     "ip":  ["7777", "443"] // 7777 - non standard SSH port, 443 - Caddy HTTPS
 }
 ```
 
 ### Option 2: All -> Host/VM
 
-Create one tag (eg. `openclaw`), and assign it to the Host/VM (can be done when generating auth key).
+Create one tag (eg. `agents`), and assign it to the Host/VM (can be done when generating auth key).
 
 ```json
 {
     "src": ["*"],
-    "dst": ["tag:zeroklaw"],
+    "dst": ["tag:agents"],
     "ip":  ["7777", "443"] // 7777 - non standard SSH port, 443 - Caddy HTTPS
 }
 ```
