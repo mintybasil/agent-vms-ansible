@@ -31,7 +31,7 @@ vm_name: ""
 #
 # Single-VM default — override in inventory/hosts.yml or host_vars/.
 vms:
-  - name: openclaw-vm
+  - name: agent-vm-1
     ip: ""
     ssh_public_key: ""
     disk_size: 20G

@@ -1,6 +1,6 @@
 ---
 - name: Setup VMs
-  hosts: openclaw_vms
+  hosts: agent_vms
   become: true
 
   roles:

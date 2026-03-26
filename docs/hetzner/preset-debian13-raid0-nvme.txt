@@ -11,7 +11,7 @@
 # installimage version uses one SWRAIDLEVEL for all, check the script docs;
 # some setups create /boot as RAID1 and the rest as RAID0.
 
-HOSTNAME openclaw-host
+HOSTNAME agents-host
 
 # Two NVMe drives — set to your block devices (lsblk)
 DRIVE1 /dev/nvme0n1

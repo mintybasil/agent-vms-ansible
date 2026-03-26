@@ -1,2 +1,3 @@
 caddy_https_port: 443
+caddy_proxy_host: 127.0.0.1 # Host to proxy
 caddy_proxy_port: 18789 # Local port to be reverse proxied

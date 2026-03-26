@@ -1,6 +1,6 @@
 all:
   hosts:
-    openclaw-host:
+    agent_host:
       ansible_host: "" # IP or hostname of the KVM host
       ansible_user: "{{ host_user }}"
       host_user: "admin" # Host user, optionally created
@@ -14,16 +14,16 @@ all:
 
   # One entry per VM. Add more hosts here for multiple VMs.
   # ansible_host should be the Tailscale IP/hostname after initial provisioning.
-  openclaw_vms:
+  agent_vms:
     hosts:
-      openclaw-vm-1:
+      agent-vm-1:
         ansible_host: "" # Tailscale IP or MagicDNS hostname
         ansible_user: "debian" # Default user
         caddy_basicauth_user:
         # Use `caddy hash-password` - https://caddyserver.com/docs/command-line#caddy-hash-password
         caddy_basicauth_hash:
 
-#        openclaw-vm-2:
+#        agent-vm-2:
 #          ansible_host: ""
 #          ansible_user: ""
 #          caddy_basicauth_user:

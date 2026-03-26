@@ -1,4 +1,3 @@
-# Ansible Galaxy collections for OpenClaw deployment.
 # Install with: ansible-galaxy collection install -r requirements.yml -p collections/
 
 collections:
