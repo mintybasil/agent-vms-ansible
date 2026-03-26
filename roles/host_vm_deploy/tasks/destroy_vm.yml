@@ -1,0 +1,44 @@
+---
+# Per-VM teardown tasks. Called in a loop from main.yml with `vm` as the loop var.
+# Each VM cleanup removes:
+#   - libvirt domain definition (and ensures it is stopped first)
+#   - VM disk image and cloud-init seed ISO from vm_image_dir
+#   - VM cloud-init config directory under vm_cloud_init_base_path
+
+- name: Set derived facts for {{ vm.name }}
+  ansible.builtin.set_fact:
+    _vm_disk_image: "{{ vm.name }}-{{ vm_debian_cloud_image }}"
+    _vm_seed_iso: "{{ vm.name }}-seed.iso"
+    _vm_cloud_init_path: "{{ vm_cloud_init_base_path }}/{{ vm.name }}"
+
+- name: List defined VMs for {{ vm.name }}
+  community.libvirt.virt:
+    command: list_vms
+  register: all_vms
+
+- name: Ensure VM is stopped for {{ vm.name }}
+  community.libvirt.virt:
+    name: "{{ vm.name }}"
+    state: destroyed
+  when: vm.name in all_vms.list_vms
+
+- name: Undefine VM domain for {{ vm.name }}
+  community.libvirt.virt:
+    name: "{{ vm.name }}"
+    command: undefine
+  when: vm.name in all_vms.list_vms
+
+- name: Remove VM disk image for {{ vm.name }}
+  ansible.builtin.file:
+    path: "{{ vm_image_dir }}/{{ _vm_disk_image }}"
+    state: absent
+
+- name: Remove cloud-init seed ISO for {{ vm.name }}
+  ansible.builtin.file:
+    path: "{{ vm_image_dir }}/{{ _vm_seed_iso }}"
+    state: absent
+
+- name: Remove cloud-init config directory for {{ vm.name }}
+  ansible.builtin.file:
+    path: "{{ _vm_cloud_init_path }}"
+    state: absent

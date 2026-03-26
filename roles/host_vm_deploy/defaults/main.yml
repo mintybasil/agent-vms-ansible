@@ -2,6 +2,17 @@ vm_image_dir: /var/lib/libvirt/images/
 vm_debian_cloud_image: debian-13-genericcloud-amd64.qcow2
 vm_debian_cloud_image_url: "https://cloud.debian.org/images/cloud/trixie/latest/{{ vm_debian_cloud_image }}"
 vm_cloud_init_base_path: "/root/cloud-init"
+vm_state: present
+vm_name: ""
+
+# VM lifecycle controls:
+#   vm_state: present|absent
+#     - present: provision or ensure selected VMs are running
+#     - absent: destroy selected VMs and remove all per-VM artifacts
+#   vm_name: optional VM selector by name
+#     - empty string selects all VMs from `vms`
+#     - non-empty selects exactly one VM by `name`
+#     - required when vm_state=absent (safety guard)
 
 # VM definitions. Each entry creates one libvirt domain with its own disk image,
 # cloud-init seed ISO, and network interface. The base Debian cloud image is
@@ -18,7 +29,7 @@ vm_cloud_init_base_path: "/root/cloud-init"
 #   vcpus          - vCPU count                            (default: 4)
 #   network_iface  - Guest NIC name seen inside the VM     (default: enp1s0)
 #
-# Single-VM default — override in group_vars/all.yml or host_vars/.
+# Single-VM default — override in inventory/hosts.yml or host_vars/.
 vms:
   - name: openclaw-vm
     ip: ""

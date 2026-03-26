@@ -1,4 +1,33 @@
 ---
+- name: Validate vm_state
+  ansible.builtin.assert:
+    that:
+      - vm_state in ['present', 'absent']
+    fail_msg: "vm_state must be either 'present' or 'absent'."
+
+- name: Require vm_name when destroying VMs
+  ansible.builtin.assert:
+    that:
+      - vm_name | length > 0
+    fail_msg: "For safety, vm_name is required when vm_state=absent."
+  when: vm_state == 'absent'
+
+- name: Build target VM list from selector
+  ansible.builtin.set_fact:
+    _target_vms: >-
+      {{
+        (vms | selectattr('name', 'equalto', vm_name) | list)
+        if (vm_name | length > 0)
+        else vms
+      }}
+
+- name: Validate vm_name selector
+  ansible.builtin.assert:
+    that:
+      - _target_vms | length > 0
+    fail_msg: "No VM named '{{ vm_name }}' found in vms."
+  when: vm_name | length > 0
+
 - name: Ensure libvirt images directory exists
   ansible.builtin.file:
     path: "{{ vm_image_dir | dirname }}"
@@ -6,24 +35,36 @@
     owner: root
     group: root
     mode: "0755"
+  when: vm_state == 'present'
 
 # The base cloud image is downloaded once and re-used — each VM gets its own copy.
 - name: Check if Debian cloud image exists
   ansible.builtin.stat:
     path: "{{ vm_image_dir }}/{{ vm_debian_cloud_image }}"
   register: cloud_image_stat
+  when: vm_state == 'present'
 
 - name: Fetch Debian cloud image
   ansible.builtin.get_url:
     url: "{{ vm_debian_cloud_image_url }}"
     dest: "{{ vm_image_dir }}"
-  when: not cloud_image_stat.stat.exists
+    mode: "0644"
+  when:
+    - vm_state == 'present'
+    - not cloud_image_stat.stat.exists
 
-# ── Per-VM provisioning ────────────────────────────────────────────────────────
-
-- name: Deploy each VM
+- name: Deploy selected VMs
   ansible.builtin.include_tasks: deploy_vm.yml
-  loop: "{{ vms }}"
+  loop: "{{ _target_vms }}"
+  when: vm_state == 'present'
+  loop_control:
+    loop_var: vm
+    label: "{{ vm.name }}"
+
+- name: Destroy selected VMs
+  ansible.builtin.include_tasks: destroy_vm.yml
+  loop: "{{ _target_vms }}"
+  when: vm_state == 'absent'
   loop_control:
     loop_var: vm
     label: "{{ vm.name }}"

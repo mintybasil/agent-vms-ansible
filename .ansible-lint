@@ -1,4 +1,4 @@
 # Public API variables (host_user, host_ssh_port, promtail_*, etc.) are set from
-# group_vars and intentionally do not use the role prefix.
+# inventory/hosts.yml and intentionally do not use the role prefix.
 skip_list:
   - var-naming[no-role-prefix]
