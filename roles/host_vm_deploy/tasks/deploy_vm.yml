@@ -30,14 +30,6 @@
     cmd: "qemu-img resize {{ _vm_disk_image }} {{ vm.disk_size | default('20G') }}"
   when: not vm_disk_image_stat.stat.exists
 
-- name: "{{ vm.name }} | Resize existing disk image to requested size"
-  ansible.builtin.command:
-    chdir: "{{ vm_image_dir }}"
-    cmd: "qemu-img resize {{ _vm_disk_image }} {{ vm.disk_size | default('20G') }}"
-  register: vm_existing_disk_resize
-  changed_when: "'Image resized.' in (vm_existing_disk_resize.stdout + vm_existing_disk_resize.stderr)"
-  when: vm_disk_image_stat.stat.exists
-
 # ── Cloud-init seed ISO ────────────────────────────────────────────────────────
 
 - name: "{{ vm.name }} | Check if seed ISO exists"
