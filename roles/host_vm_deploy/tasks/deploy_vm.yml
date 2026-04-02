@@ -91,11 +91,27 @@
     command: list_vms
   register: all_vms
 
-- name: "{{ vm.name }} | Define VM from XML template"
+- name: "{{ vm.name }} | Check VM power state before redefine"
+  ansible.builtin.command:
+    cmd: "virsh domstate {{ vm.name }}"
+  register: vm_domstate_before
+  changed_when: false
+  when: vm.name in all_vms.list_vms
+
+- name: "{{ vm.name }} | Define or redefine VM from XML template"
   community.libvirt.virt:
     command: define
     xml: "{{ lookup('template', 'vm.xml.j2') }}"
-  when: vm.name not in all_vms.list_vms
+  register: vm_define_result
+
+- name: "{{ vm.name }} | Restart running VM after definition change"
+  community.libvirt.virt:
+    name: "{{ vm.name }}"
+    state: destroyed
+  when:
+    - vm.name in all_vms.list_vms
+    - vm_define_result.changed
+    - "'running' in (vm_domstate_before.stdout | lower)"
 
 - name: "{{ vm.name }} | Ensure VM is running"
   community.libvirt.virt:

@@ -14,6 +14,8 @@ Hardened VM deployments for running agents.
   - [Requirements](#requirements)
   - [Host Setup](#host-setup)
   - [Deploying/Updating VMs](#deployingupdating-vms)
+    - [Modifying CPU/Memory](#modifying-cpumemory)
+    - [Modifying Disk Size](#modifying-disk-size)
   - [Configuring VMs](#configuring-vms)
   - [Destroying VMs](#destroying-vms)
 - [Additional Notes](#additional-notes)
@@ -86,14 +88,46 @@ Hardened VM deployments for running agents.
 2. Acquire a Tailscale auth key (**warning:** key is stored in VM; prefer one-time/ephemeral keys)
 3. Deploy or update all VMs in `vms`:
    ```shell
-   ansible-playbook playbooks/vm-deploy.yml -e tailscale_auth_key=<key> --ask-become-pass
+   ansible-playbook playbooks/vm-deploy.yml --ask-become-pass -e tailscale_auth_key=<key>
    ```
    OR deploy or update one VM by name:
    ```shell
-   ansible-playbook playbooks/vm-deploy.yml -e tailscale_auth_key=<key> -e vm_name=<vm-name> --ask-become-pass
+   ansible-playbook playbooks/vm-deploy.yml --ask-become-pass -e vm_name=<vm-name>
    ```
 5. Verify VM(s) are reachable via Tailscale SSH after boot
 6. Ensure `inventory/hosts.yml` includes VM host entries you want to configure with VM-level playbooks
+
+### Modifying CPU/Memory
+
+If `vcpus` or `memory_mib` are modified and the VM was already running, the definition is updated and the VM is restarted so the new CPU/memory values take effect.
+
+### Modifying Disk Size
+
+The disk size must be manually increased once the VM is created.
+
+```shell
+# Stop the VM
+virsh shutdown <vm-name>
+
+# Find the disk image path
+virsh domblklist <vm-name>
+
+# Create a backup of the image
+cp /path/to/disk.qcow2 /path/to/disk.qcow2.bak
+
+# Check the current  size
+qemu-img info /path/to/disk.qcow2
+
+qemu-img resize /path/to/disk.qcow2 +20G   # add 20GB
+qemu-img resize /path/to/disk.qcow2 50G    # set absolute size to 50GB
+
+# Start the VM
+virsh start <vm-name>
+
+# Delete backup
+rm -rf /path/to/disk.qcow2.bak
+```
+
 
 ## Configuring VMs
 
