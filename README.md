@@ -107,6 +107,13 @@ Hardened VM deployments for running agents.
    ```
 3. Confirm authentication works on `https://<vm_tailscale_hostname>`
 
+## Modifying VM Disk/CPU/Memory
+
+- `disk_size`: Existing VM disk images are resized in place via `qemu-img resize`. Grow operations preserve existing data; shrink is not allowed.
+  - After increasing `disk_size`, the partition/filesystem inside the guest OS will need to be manually resized.
+- `vcpus` / `memory_mib`: If the VM was already running, the definition is updated and the VM is restarted so the new CPU/memory values take effect.
+
+
 ## Destroying VMs
 
 1. Destroy a VM (domain + disk + seed ISO + cloud-init files):

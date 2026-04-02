@@ -11,6 +11,16 @@ all:
 #     promtail_loki_url: ""
 #     promtail_basic_auth_user: ""
 #     promtail_basic_auth_password: ""
+      # VM definitions used by playbooks/vm-deploy.yml
+      vms:
+        - name: "agent-vm-1"
+          user: "debian"
+          ip: "192.168.122.101"
+          ssh_public_key: "ssh-ed25519 AAAA...replace-with-your-key"
+          disk_size: "20G"
+          memory_mib: 4096
+          vcpus: 4
+          network_iface: "enp1s0"
 
   # One entry per VM. Add more hosts here for multiple VMs.
   # ansible_host should be the Tailscale IP/hostname after initial provisioning.
