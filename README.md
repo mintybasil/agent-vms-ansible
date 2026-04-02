@@ -14,6 +14,8 @@ Hardened VM deployments for running agents.
   - [Requirements](#requirements)
   - [Host Setup](#host-setup)
   - [Deploying/Updating VMs](#deployingupdating-vms)
+    - [Modifying CPU/Memory](#modifying-cpumemory)
+    - [Modifying Disk Size](#modifying-disk-size)
   - [Configuring VMs](#configuring-vms)
   - [Destroying VMs](#destroying-vms)
 - [Additional Notes](#additional-notes)
@@ -95,25 +97,13 @@ Hardened VM deployments for running agents.
 5. Verify VM(s) are reachable via Tailscale SSH after boot
 6. Ensure `inventory/hosts.yml` includes VM host entries you want to configure with VM-level playbooks
 
-## Configuring VMs
-
-### Caddy
-1. Set `caddy_basicauth_user` and `caddy_basicauth_hash`
-2. Deploy Caddy with Tailscale HTTPS:
-   ```shell
-   ansible-playbook playbooks/vm-setup.yml --tags caddy
-   # or for one VM host
-   ansible-playbook playbooks/vm-setup.yml --tags caddy --limit <host>
-   ```
-3. Confirm authentication works on `https://<vm_tailscale_hostname>`
-
-## Modifying CPU/Memory
+### Modifying CPU/Memory
 
 If `vcpus` or `memory_mib` are modified and the VM was already running, the definition is updated and the VM is restarted so the new CPU/memory values take effect.
 
-## Modifying Disk Size
+### Modifying Disk Size
 
-The disk size must be manually increased once the VM is created. 
+The disk size must be manually increased once the VM is created.
 
 ```shell
 # Stop the VM
@@ -137,6 +127,19 @@ virsh start <vm-name>
 # Delete backup
 rm -rf /path/to/disk.qcow2.bak
 ```
+
+
+## Configuring VMs
+
+### Caddy
+1. Set `caddy_basicauth_user` and `caddy_basicauth_hash`
+2. Deploy Caddy with Tailscale HTTPS:
+   ```shell
+   ansible-playbook playbooks/vm-setup.yml --tags caddy
+   # or for one VM host
+   ansible-playbook playbooks/vm-setup.yml --tags caddy --limit <host>
+   ```
+3. Confirm authentication works on `https://<vm_tailscale_hostname>`
 
 ## Destroying VMs
 

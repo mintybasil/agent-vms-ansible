@@ -24,7 +24,7 @@ vm_name: ""
 #   ssh_public_key - SSH public key for vm.user
 #
 # Optional per VM (defaults shown):
-#   disk_size      - Disk size passed to qemu-img resize   (default: 20G, grow-only)
+#   disk_size      - Disk size passed to qemu-img resize   (default: 20G)
 #   memory_mib     - RAM in MiB                            (default: 4096)
 #   vcpus          - vCPU count                            (default: 4)
 #   network_iface  - Guest NIC name seen inside the VM     (default: enp1s0)
