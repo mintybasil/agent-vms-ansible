@@ -20,6 +20,9 @@ packages:
   - gpg
   - git
   - htop
+  - tmux
+  - unzip
+  - jq
 
 write_files:
   - path: /usr/local/bin/setup-tailscale.sh
