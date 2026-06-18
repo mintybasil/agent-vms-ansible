@@ -40,16 +40,16 @@ Hardened VM deployments for running agents.
    ansible-playbook playbooks/host-setup.yml --tags user -e ansible_user=root
    ```
 4. SSH as `root` and set a strong password (`passwd <user>`)
-5. SSH as the new user to confirm setup and verify `sudo ls` works
+5. SSH as the new user to confirm setup, and verify sudo capabilities with something like `sudo ls`
 
 ### 2) Setup Tailscale on host
 > Visit [tailscale.com/admin/settings/keys](https://tailscale.com/admin/settings/keys) to create an auth key.
 
 1. Install and configure Tailscale:
    ```shell
-   ansible-playbook playbooks/host-setup.yml --tags tailscale -e tailscale_auth_key=<key> --ask-become-pass
+   ansible-playbook playbooks/host-setup.yml --tags tailscale --ask-become-pass -e tailscale_auth_key=<key>
    ```
-2. Update `inventory/hosts.yml` (or SSH config) to use the host's Tailscale IP/hostname
+2. Update `inventory/hosts.yml` (or your local SSH config) to use the host's Tailscale IP/hostname
 
 ### 3) SSH hardening (optional)
 > Run after the non-root user is working. Ensure the firewall allows `host_ssh_port` before changing the port.
@@ -86,14 +86,17 @@ Hardened VM deployments for running agents.
 
 1. Define VM entries under `vms` in `inventory/hosts.yml`
 2. Acquire a Tailscale auth key (**warning:** key is stored in VM; prefer one-time/ephemeral keys)
-3. Deploy or update all VMs in `vms`:
-   ```shell
-   ansible-playbook playbooks/vm-deploy.yml --ask-become-pass -e tailscale_auth_key=<key>
-   ```
-   OR deploy or update one VM by name:
-   ```shell
-   ansible-playbook playbooks/vm-deploy.yml --ask-become-pass -e vm_name=<vm-name>
-   ```
+3. Deploy/update all VMs in `vms`:
+    ```shell
+    # Deploy all, with tailscale key for setup
+    ansible-playbook playbooks/vm-deploy.yml --ask-become-pass -e tailscale_auth_key=<key>
+    # OR - Update/deploy all
+    ansible-playbook playbooks/vm-deploy.yml --ask-become-pass
+    # OR - Deploy specific vm, with tailscale key for setup
+    ansible-playbook playbooks/vm-deploy.yml --ask-become-pass -e vm_name=<vm-name> -e tailscale_auth_key=<key>
+    # OR - Update specific vm
+    ansible-playbook playbooks/vm-deploy.yml --ask-become-pass -e vm_name=<vm-name>
+    ```
 5. Verify VM(s) are reachable via Tailscale SSH after boot
 6. Ensure `inventory/hosts.yml` includes VM host entries you want to configure with VM-level playbooks
 
