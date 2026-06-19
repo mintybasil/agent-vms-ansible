@@ -12,6 +12,8 @@ ExecStart=/usr/bin/ob sync --continuous --path {{ obsidian_vault_path }}
 Restart=on-failure
 RestartSec=10
 TimeoutStartSec=30
+User=debian
+Group=debian
 
 [Install]
 WantedBy=default.target

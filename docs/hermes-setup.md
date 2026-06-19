@@ -18,7 +18,7 @@ ansible-playbook playbooks/hermes-setup.yml --tags install_docker,install_nodejs
 
 ## 2. Install Github CLI & MCP server
 
-This will install and authenticate `gh`, and deploy the MCP server as a docker container.
+This will install and authenticate `gh`, and deploy the MCP server as a docker container (available on `localhost:8080`).
 ```shell
 GH_TOKEN=<TOKEN> ansible-playbook playbooks/hermes-setup.yml --tags gh_mcp,gh_cli
 ```
@@ -31,11 +31,11 @@ You will need an auth token and the vault id, which can retrieved on your local 
 ```shell
 mkdir /tmp/ob-token-gen
 HOME=/tmp/ob-token-gen npx obsidian-headless login
-cat /tmp/ob-token-gen/.config/obsidian-headless/auth_token
+cat /tmp/ob-token-gen/.obsidian-headless/auth_token
 HOME=/tmp/ob-token-gen npx obsidian-headless sync-list-remote
 ```
 >[!NOTE]
-> The vault ID or name can be used for OB_VAULT_ID. It will also be used to name the vault directory (`~/<OB_VAULT_ID>`). 
+> The vault ID or name can be used for OB_VAULT_ID. It will also be used to name the vault directory (`~/ob-vault-<OB_VAULT_ID>`). 
 
 ```shell
 OB_TOKEN=<TOKEN> \

@@ -1,23 +1,23 @@
 ---
-- name: "Install obsidian-headless"
+- name: Install obsidian-headless
   community.general.npm:
     name: obsidian-headless
     global: true
   become: true
 
-- name: "Ensure config dir exists"
+- name: Ensure config dir exists
   ansible.builtin.file:
     path: "~/.config/obsidian-headless"
     state: directory
 
-- name: "Deploy auth key"
+- name: Deploy auth key
   ansible.builtin.copy:
     content: "{{ obsidian_token | trim }}"
     dest: "~/.config/obsidian-headless/auth_token"
     mode: '0600'
   no_log: true
 
-- name: "Verify authentication"
+- name: Verify authentication
   ansible.builtin.shell: "ob sync-list-remote"
 
 - name: Create vault dir
@@ -28,47 +28,28 @@
 - name: Connect remote vault
   ansible.builtin.command: "ob sync-setup --vault {{ obsidian_vault_id }} --path {{ obsidian_vault_path }} --password {{ obsidian_vault_password }}"
 
-- name: Create systemd user unit directory
-  ansible.builtin.file:
-    path: "{{ ansible_facts['env']['HOME'] }}/.config/systemd/user"
-    state: directory
-    mode: "0755"
-
 - name: Deploy obsidian-sync.service from template
+  become: true
   ansible.builtin.template:
     src: obsidian-sync.service.j2
-    dest: "{{ ansible_facts['env']['HOME'] }}/.config/systemd/user/obsidian-sync.service"
+    dest: /etc/systemd/system/obsidian-sync.service
+    owner: root
+    group: root
     mode: "0644"
-
-- name: Reload systemd user daemon
-  ansible.builtin.systemd:
-    name: "obsidian-sync"
-    scope: user
-    daemon_reload: true
-
-- name: Enable lingering so user services survive logout
-  become: true
-  ansible.builtin.command:
-    cmd: "loginctl enable-linger {{ ansible_user_id }}"
-  changed_when: false
-
-- name: Reload systemd user daemon
-  ansible.builtin.systemd:
-    name: "obsidian-sync"
-    scope: user
-    daemon_reload: true
+  register: service_file
 
 - name: Enable and start obsidian-sync service
+  become: true
   ansible.builtin.systemd:
-    name: "obsidian-sync"
+    name: obsidian-sync
     enabled: true
-    state: started
-    scope: user
+    state: restarted
     daemon_reload: true
 
 - name: Show service status
+  become: true
   ansible.builtin.command:
-    cmd: "systemctl --user status obsidian-sync"
+    cmd: "systemctl status obsidian-sync"
   changed_when: false
   register: svc_status
 

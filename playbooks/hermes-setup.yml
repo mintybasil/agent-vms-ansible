@@ -23,7 +23,7 @@
         obsidian_token: "{{ lookup('env', 'OB_TOKEN') }}"
         obsidian_vault_password: "{{ lookup('env', 'OB_VAULT_PW') }}"
         obsidian_vault_id: "{{ lookup('env', 'OB_VAULT_ID') }}"
-        obsidian_vault_path: "/home/debian/{{ obsidian_vault_id }}"
+        obsidian_vault_path: "/home/debian/ob-vault-{{ obsidian_vault_id }}"
 
     - role: hermes
       tags: [hermes]

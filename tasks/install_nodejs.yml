@@ -1,12 +1,25 @@
 ---
-- name: Run source install
-  ansible.builtin.shell: "curl -fsSL https://deb.nodesource.com/setup_24.x | bash -"
-  become: true
+- name: Check if nodejs is installed
+  register: nodejs_exists
+  ansible.builtin.command: which node
+  changed_when: false
+  failed_when: false
 
 - name: Install nodejs
-  become: true
-  ansible.builtin.apt:
-    package:
-      - nodejs
-    state: present
-    update_cache: true
+  when: nodejs_exists.rc != 0
+  block:
+  - name: Run source install
+    ansible.builtin.shell: "curl -fsSL https://deb.nodesource.com/setup_24.x | bash -"
+    become: true
+
+  - name: Install nodejs
+    become: true
+    ansible.builtin.apt:
+      package:
+        - nodejs
+      state: present
+      update_cache: true
+
+- name: Validate install
+  ansible.builtin.command: "node --version && npm --version"
+  changed_when: false
