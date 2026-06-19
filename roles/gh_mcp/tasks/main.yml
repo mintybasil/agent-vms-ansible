@@ -1,0 +1,13 @@
+---
+- name: Deploy container
+  community.docker.docker_container:
+    name: "github_mcp_server"
+    image: "ghcr.io/github/github-mcp-server"
+    recreate: "true"
+    pull: "always"
+    restart_policy: unless-stopped
+    ports: "{{ gh_mcp_port }}:{{ gh_mcp_port }}"
+    env:
+      GITHUB_TOOLSETS: "{{ gh_mcp_toolsets }}"
+    command: "http --port={{ gh_mcp_port }}"
+    state: "started"

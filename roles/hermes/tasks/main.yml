@@ -1,0 +1,5 @@
+---
+- name: Install hermes
+  tags: [install, hermes_install]
+  import_tasks: install.yml
+

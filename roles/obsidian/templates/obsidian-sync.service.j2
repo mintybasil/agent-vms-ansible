@@ -1,0 +1,17 @@
+# Obsidian Headless continuous-sync systemd service (user scope)
+# Managed by Ansible — do not edit by hand.
+
+[Unit]
+Description=Obsidian Headless Continuous Sync
+Documentation=https://obsidian.md/help/sync/headless
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/ob sync --continuous --path {{ obsidian_vault_path }}
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=30
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,29 @@
+---
+- name: Hermes Services
+  hosts: agent_vms
+
+  pre_tasks:
+    - import_tasks: ../tasks/install_docker.yml
+      tags: [install, install_docker]
+    - import_tasks: ../tasks/install_nodejs.yml
+      tags: [install, install_nodejs]
+
+  roles:
+    - role: gh_mcp
+      tags: [gh_mcp]
+
+    - role: gh_cli
+      tags: [gh_cli]
+      vars:
+        gh_cli_pat: "{{ lookup('env', 'GH_TOKEN') }}"
+
+    - role: obsidian
+      tags: [obsidian]
+      vars:
+        obsidian_token: "{{ lookup('env', 'OB_TOKEN') }}"
+        obsidian_vault_password: "{{ lookup('env', 'OB_VAULT_PW') }}"
+        obsidian_vault_id: "{{ lookup('env', 'OB_VAULT_ID') }}"
+        obsidian_vault_path: "/home/debian/{{ obsidian_vault_id }}"
+
+    - role: hermes
+      tags: [hermes]

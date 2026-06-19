@@ -1,0 +1,35 @@
+---
+- name: Check if docker is installed
+  register: docker_exists
+  ansible.builtin.command: which docker
+  changed_when: false
+  failed_when: false
+
+- name: Install docker
+  when: docker_exists.rc != 0
+  block:
+  - name: Add GPG key
+    ansible.builtin.shell:
+      cmd: curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+      creates: /etc/apt/keyrings/docker.asc
+
+  - name: Add Docker repository into sources list
+    ansible.builtin.apt_repository:
+      repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable"
+      state: present
+      update_cache: true
+
+  - name: Install Docker
+    ansible.builtin.apt:
+      pkg:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        - docker-buildx-plugin
+        - docker-compose-plugin
+
+- name: Confirm docker is running
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true

@@ -134,15 +134,7 @@ rm -rf /path/to/disk.qcow2.bak
 
 ## Configuring VMs
 
-### Caddy
-1. Set `caddy_basicauth_user` and `caddy_basicauth_hash`
-2. Deploy Caddy with Tailscale HTTPS:
-   ```shell
-   ansible-playbook playbooks/vm-setup.yml --tags caddy
-   # or for one VM host
-   ansible-playbook playbooks/vm-setup.yml --tags caddy --limit <host>
-   ```
-3. Confirm authentication works on `https://<vm_tailscale_hostname>`
+See [Hermes Agent Setup](/docs/hermes-setup.md) for how to configure a VM for Hermes.
 
 ## Destroying VMs
 
