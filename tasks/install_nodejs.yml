@@ -8,17 +8,24 @@
 - name: Install nodejs
   when: nodejs_exists.rc != 0
   block:
-  - name: Run source install
-    ansible.builtin.shell: "curl -fsSL https://deb.nodesource.com/setup_24.x | bash -"
-    become: true
+    - name: Download install script
+      ansible.builtin.get_url:
+        url: https://deb.nodesource.com/setup_24.x
+        dest: /tmp/nodesource-install.sh
+        mode: '0755'
 
-  - name: Install nodejs
-    become: true
-    ansible.builtin.apt:
-      package:
-        - nodejs
-      state: present
-      update_cache: true
+    - name: Run install script
+      ansible.builtin.command: "/tmp/nodesource-install.sh"
+      args:
+        creates: "/etc/apt/sources.list.d/nodesource.sources"
+
+    - name: Install nodejs
+      become: true
+      ansible.builtin.apt:
+        package:
+          - nodejs
+        state: present
+        update_cache: true
 
 - name: Validate install
   ansible.builtin.command: "node --version && npm --version"

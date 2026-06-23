@@ -3,10 +3,16 @@
   hosts: agent_vms
 
   pre_tasks:
-    - import_tasks: ../tasks/install_docker.yml
+    - name: Install Docker
+      import_tasks: ../tasks/install_docker.yml
       tags: [install, install_docker]
-    - import_tasks: ../tasks/install_nodejs.yml
+    - name: Install Node.js
+      import_tasks: ../tasks/install_nodejs.yml
       tags: [install, install_nodejs]
+    - name: Install Rust
+      import_tasks: ../tasks/install_rust.yml
+      tags: [install, install_rust]
+      become: true
 
   roles:
     - role: gh_mcp

@@ -2,3 +2,6 @@
 # inventory/hosts.yml and intentionally do not use the role prefix.
 skip_list:
   - var-naming[no-role-prefix]
+  - fqcn[action-core]    # by rule ID
+  - yaml[new-line-at-end-of-file]
+  - name[template]

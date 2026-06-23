@@ -23,12 +23,14 @@
     chdir: "{{ vm_image_dir }}"
     cmd: "qemu-img convert -f qcow2 -O qcow2 {{ vm_debian_cloud_image }} {{ _vm_disk_image }}"
   when: not vm_disk_image_stat.stat.exists
+  changed_when: true
 
 - name: "{{ vm.name }} | Resize disk image"
   ansible.builtin.command:
     chdir: "{{ vm_image_dir }}"
     cmd: "qemu-img resize {{ _vm_disk_image }} {{ vm.disk_size | default('20G') }}"
   when: not vm_disk_image_stat.stat.exists
+  changed_when: true
 
 # ── Cloud-init seed ISO ────────────────────────────────────────────────────────
 

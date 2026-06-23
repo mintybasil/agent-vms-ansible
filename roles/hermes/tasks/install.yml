@@ -1,3 +1,11 @@
 ---
+- name: Download install script
+  ansible.builtin.get_url:
+    url: https://hermes-agent.nousresearch.com/install.sh
+    dest: /tmp/hermes-install.sh
+    mode: '0755'
+
 - name: Run install script
-  ansible.builtin.shell: "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
+  ansible.builtin.command: "/tmp/hermes-install.sh"
+  args:
+    creates: "{{ ansible_home }}/.hermes"

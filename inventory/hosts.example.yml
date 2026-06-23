@@ -21,10 +21,9 @@ all:
           memory_mib: 4096
           vcpus: 4
           network_iface: "enp1s0"
-
-  agent_vms:
-    hosts:
-      agent-vm-1:
-        ansible_host: "" # (Optional) Tailscale IP or MagicDNS hostname
-        ansible_user: "debian" # (Optional) Default user
-
+  children:
+    agent_vms:
+      hosts:
+        agent-vm-1:
+          ansible_host: "" # (Optional) Tailscale IP or MagicDNS hostname
+          ansible_user: "debian" # (Optional) Default user
