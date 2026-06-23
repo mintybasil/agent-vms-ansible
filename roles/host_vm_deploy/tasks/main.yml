@@ -55,16 +55,16 @@
 
 - name: Deploy selected VMs
   ansible.builtin.include_tasks: deploy_vm.yml
-  loop: "{{ _target_vms }}"
   when: vm_state == 'present'
+  loop: "{{ _target_vms | enumerate }}"
   loop_control:
-    loop_var: vm
-    label: "{{ vm.name }}"
+    loop_var: vm_pair
+    label: "{{ vm_pair.0.name }}"
 
 - name: Destroy selected VMs
   ansible.builtin.include_tasks: destroy_vm.yml
-  loop: "{{ _target_vms }}"
   when: vm_state == 'absent'
+  loop: "{{ _target_vms | enumerate }}"
   loop_control:
-    loop_var: vm
-    label: "{{ vm.name }}"
+    loop_var: vm_pair
+    label: "{{ vm_pair.0.name }}"

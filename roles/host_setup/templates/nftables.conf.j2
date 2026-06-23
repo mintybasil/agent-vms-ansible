@@ -11,7 +11,9 @@ table inet firewall {
         ct state invalid drop
         iifname "lo" accept
         iifname "tailscale0" accept       # Tailscale interface
-        iifname "{{ vm_bridge_iface }}" accept    # trust traffic from VM to host (DNS, DHCP)
+{% for net in vm_networks %}
+        iifname "{{ net.bridge }}" accept    # trust traffic from {{ net.name }} to host (DNS, DHCP)
+{% endfor %}
         udp dport 41641 accept            # WireGuard inbound handshakes
         tcp dport {{ host_ssh_port }} accept
     }
@@ -21,14 +23,27 @@ table inet firewall {
 
         ct state established,related accept
 
+        # --- Inter-VM explicit allow rules ---
+        # Generated from vm_interconnects. Each entry allows a specific
+        # source VM to reach a destination VM on a specific port.
+        # Default is deny: VMs cannot reach each other unless listed here.
+{% for rule in vm_interconnects | default([]) %}
+{%   set src = vm_networks | selectattr('name', 'equalto', rule.from ~ '-net') | first %}
+{%   set dst = vm_networks | selectattr('name', 'equalto', rule.to ~ '-net') | first %}
+        # {{ rule.from }} -> {{ rule.to }} port {{ rule.port }}
+        iifname "{{ src.bridge }}" oifname "{{ dst.bridge }}" ip daddr 10.200.{{ dst.subnet_octet }}.2 tcp dport {{ rule.port }} accept
+{% endfor %}
+
+{% for net in vm_networks %}
+        # --- {{ net.name }} ({{ net.bridge }}) ---
         # allow VM DNS queries out
-        iifname "{{ vm_bridge_iface }}" udp dport 53 accept
+        iifname "{{ net.bridge }}" udp dport 53 accept
+        # VM egress: allow outbound to approved ports outside VM subnets
+        iifname "{{ net.bridge }}" ip daddr != { {{ vm_subnet_cidrs | join(', ') }} } tcp dport { {{ vm_allowed_outbound_ports | join(', ') }} } accept
+        # drop everything else originating from this VM bridge
+        iifname "{{ net.bridge }}" drop
 
-        # VM egress: allow outbound HTTP/S from VM subnet only
-        iifname "{{ vm_bridge_iface }}" ip daddr != {{ vm_bridge_subnet }} tcp dport { {{ vm_allowed_outbound_ports | join(', ') }} } accept
-
-        # drop everything else originating from VM
-        iifname "{{ vm_bridge_iface }}" drop
+{% endfor %}
     }
 
     chain output {
@@ -37,7 +52,9 @@ table inet firewall {
 
     chain postrouting {
         type nat hook postrouting priority srcnat;
-        iifname "{{ vm_bridge_iface }}" masquerade;
+{% for net in vm_networks %}
+        iifname "{{ net.bridge }}" masquerade
+{% endfor %}
     }
 
 }

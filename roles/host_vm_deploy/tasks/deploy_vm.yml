@@ -1,15 +1,25 @@
 ---
-# Per-VM provisioning tasks. Called in a loop from main.yml with `vm` as the loop var.
+# Per-VM provisioning tasks. Called in a loop from main.yml with `vm_pair` as the loop var.
+# `vm_pair` is a (vm, index) tuple from enumerate. We unpack it here.
 # Each VM gets:
 #   - Its own disk image: <name>-<cloud-image>.qcow2
 #   - Its own seed ISO:   <name>-seed.iso
 #   - Its own cloud-init config dir: {{ vm_cloud_init_base_path }}/<name>/
+#   - Its own libvirt network: <name>-net with bridge vmbrNN and subnet 10.200.N.0/30
+
+- name: "{{ vm.name }} | Unpack VM index"
+  ansible.builtin.set_fact:
+    vm: "{{ vm_pair.0 }}"
+    vm_network_index: "{{ vm_pair.1 }}"
 
 - name: "{{ vm.name }} | Set derived facts"
   ansible.builtin.set_fact:
     _vm_disk_image: "{{ vm.name }}-{{ vm_debian_cloud_image }}"
     _vm_seed_iso: "{{ vm.name }}-seed.iso"
     _vm_cloud_init_path: "{{ vm_cloud_init_base_path }}/{{ vm.name }}"
+    _vm_network_name: "{{ vm.name }}-net"
+    _vm_bridge_name: "{{ vm_bridge_prefix }}{{ '%02d' | format(vm_bridge_offset | int + vm_network_index | int) }}"
+    _vm_subnet_octet: "{{ vm_subnet_base | int + vm_network_index | int }}"
 
 # ── Disk image ─────────────────────────────────────────────────────────────────
 
