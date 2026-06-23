@@ -31,9 +31,9 @@
             <readonly/>
         </disk>
 
-        <!-- Network: shared libvirt default NAT network -->
+        <!-- Network: per-VM isolated NAT network -->
         <interface type='network'>
-            <source network='default'/>
+            <source network='{{ _vm_network_name }}'/>
             <model type='virtio'/>
         </interface>
 

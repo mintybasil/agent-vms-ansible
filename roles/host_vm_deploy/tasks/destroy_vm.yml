@@ -1,15 +1,19 @@
 ---
-# Per-VM teardown tasks. Called in a loop from main.yml with `vm` as the loop var.
+# Per-VM teardown tasks. Called in a loop from main.yml with `vm_pair` as the loop var.
+# `vm_pair` is a (vm, index) tuple from enumerate. We unpack it here.
 # Each VM cleanup removes:
 #   - libvirt domain definition (and ensures it is stopped first)
 #   - VM disk image and cloud-init seed ISO from vm_image_dir
 #   - VM cloud-init config directory under vm_cloud_init_base_path
+#   - Per-VM libvirt network (<name>-net)
 
 - name: Set derived facts for {{ vm.name }}
   ansible.builtin.set_fact:
-    _vm_disk_image: "{{ vm.name }}-{{ vm_debian_cloud_image }}"
-    _vm_seed_iso: "{{ vm.name }}-seed.iso"
-    _vm_cloud_init_path: "{{ vm_cloud_init_base_path }}/{{ vm.name }}"
+    vm: "{{ vm_pair.0 }}"
+    _vm_disk_image: "{{ vm_pair.0.name }}-{{ vm_debian_cloud_image }}"
+    _vm_seed_iso: "{{ vm_pair.0.name }}-seed.iso"
+    _vm_cloud_init_path: "{{ vm_cloud_init_base_path }}/{{ vm_pair.0.name }}"
+    _vm_network_name: "{{ vm_pair.0.name }}-net"
 
 - name: List defined VMs for {{ vm.name }}
   community.libvirt.virt:
@@ -42,3 +46,17 @@
   ansible.builtin.file:
     path: "{{ _vm_cloud_init_path }}"
     state: absent
+
+- name: Destroy per-VM libvirt network for {{ vm.name }}
+  ansible.builtin.command:
+    cmd: "virsh net-destroy {{ _vm_network_name }}"
+  register: net_destroy
+  changed_when: net_destroy.rc == 0
+  failed_when: net_destroy.rc != 0 and 'not found' not in net_destroy.stderr
+
+- name: Undefine per-VM libvirt network for {{ vm.name }}
+  ansible.builtin.command:
+    cmd: "virsh net-undefine {{ _vm_network_name }}"
+  register: net_undefine
+  changed_when: net_undefine.rc == 0
+  failed_when: net_undefine.rc != 0 and 'not found' not in net_undefine.stderr

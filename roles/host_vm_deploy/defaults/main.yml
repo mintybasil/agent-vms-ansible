@@ -20,7 +20,7 @@ vm_name: ""
 #
 # Required per VM:
 #   name           - VM hostname and libvirt domain name (must be unique)
-#   ip             - Static IP on the libvirt NAT network (192.168.122.x)
+#   ip             - Static IP on the VM's dedicated libvirt NAT network
 #   ssh_public_key - SSH public key for vm.user
 #
 # Optional per VM (defaults shown):
@@ -28,6 +28,14 @@ vm_name: ""
 #   memory_mib     - RAM in MiB                            (default: 4096)
 #   vcpus          - vCPU count                            (default: 4)
 #   network_iface  - Guest NIC name seen inside the VM     (default: enp1s0)
+#
+# Per-VM network isolation:
+#   Each VM gets its own libvirt network (<name>-net) with a dedicated bridge
+#   (vmbrNN) and /30 subnet (10.200.N.0/30). Bridge and subnet are derived
+#   from the VM's position in the vms list using these vars:
+vm_bridge_prefix: "vmbr"
+vm_bridge_offset: 10
+vm_subnet_base: 0
 #
 # Single-VM default — override in inventory/hosts.yml or host_vars/.
 vms:
