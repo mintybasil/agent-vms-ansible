@@ -1,0 +1,6 @@
+---
+- name: Deploy SOUL.md
+  ansible.builtin.copy:
+    src: "{{ hermes_profile }}-SOUL.md"
+    dest: "{{ hermes_home }}/SOUL.md"
+    mode: '0644'

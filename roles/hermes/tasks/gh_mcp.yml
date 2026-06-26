@@ -1,0 +1,28 @@
+---
+- name: Set MCP Auth Key
+  ansible.builtin.import_tasks: utils/set-env.yml
+  vars:
+    hermes_key: "MCP_GITHUB_API_KEY"
+    hermes_value: "{{ hermes_gh_token }}"
+
+- name: Set MCP url
+  ansible.builtin.import_tasks: utils/set-config.yml
+  vars:
+    hermes_key: "mcp_servers.github.url"
+    hermes_value: "http://localhost:{{ hermes_gh_mcp_port }}"
+
+- name: Set MCP Headers Auth
+  ansible.builtin.import_tasks: utils/set-config.yml
+  vars:
+    hermes_key: "mcp_servers.github.headers.Authorization"
+    hermes_value: "Bearer ${MCP_GITHUB_API_KEY}"
+
+- name: Set MCP enabled
+  ansible.builtin.import_tasks: utils/set-config.yml
+  vars:
+    hermes_key: "mcp_servers.github.enabled"
+    hermes_value: "true"
+
+- name: Test MCP server
+  ansible.builtin.command: "{{ hermes_profile }} mcp test github"
+  changed_when: false

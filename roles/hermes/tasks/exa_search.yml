@@ -1,0 +1,12 @@
+---
+- name: Set Exa API key
+  import_tasks: utils/set-env.yml
+  vars:
+    hermes_key: "EXA_API_KEY"
+    hermes_value: "{{ hermes_exa_api_key }}"
+
+- name: Set Exa API key
+  import_tasks: utils/set-config.yml
+  vars:
+    hermes_key: "web.backend"
+    hermes_value: "exa"

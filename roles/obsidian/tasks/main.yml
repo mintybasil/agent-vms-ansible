@@ -1,0 +1,63 @@
+---
+- name: Install obsidian-headless
+  community.general.npm:
+    name: obsidian-headless
+    global: true
+  become: true
+
+- name: Ensure config dir exists
+  ansible.builtin.file:
+    path: "~/.config/obsidian-headless"
+    state: directory
+    mode: '0700'
+
+- name: Deploy auth key
+  ansible.builtin.copy:
+    content: "{{ obsidian_token | trim }}"
+    dest: "~/.config/obsidian-headless/auth_token"
+    mode: '0600'
+#  no_log: true
+
+- name: Verify authentication
+  ansible.builtin.command: "ob sync-list-remote"
+  changed_when: false
+
+- name: Create vault dir
+  ansible.builtin.file:
+    path: "{{ obsidian_vault_path }}"
+    state: directory
+    mode: '0700'
+
+- name: Connect remote vault
+  ansible.builtin.command: "ob sync-setup --vault {{ obsidian_vault_id }} --path {{ obsidian_vault_path }} --password {{ obsidian_vault_password }}"
+  args:
+    creates: "{{ obsidian_vault_path }}/.obsidian"
+
+- name: Deploy obsidian-sync.service from template
+  become: true
+  ansible.builtin.template:
+    src: obsidian-sync.service.j2
+    dest: /etc/systemd/system/obsidian-sync.service
+    owner: root
+    group: root
+    mode: "0644"
+  register: service_file
+
+- name: Enable and start obsidian-sync service
+  become: true
+  ansible.builtin.systemd:
+    name: obsidian-sync
+    enabled: true
+    state: restarted
+    daemon_reload: true
+
+- name: Show service status
+  become: true
+  ansible.builtin.command:
+    cmd: "systemctl status obsidian-sync"
+  changed_when: false
+  register: svc_status
+
+- name: Print status
+  ansible.builtin.debug:
+    var: svc_status.stdout_lines

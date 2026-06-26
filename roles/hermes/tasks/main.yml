@@ -1,0 +1,4 @@
+---
+- name: Run selected tasks
+  loop: "{{ hermes_enabled_tasks }}"
+  include_tasks: "{{ item }}.yml"

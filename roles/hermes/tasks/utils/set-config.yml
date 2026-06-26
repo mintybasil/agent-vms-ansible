@@ -1,0 +1,5 @@
+---
+- name: "Set {{ hermes_key }}"
+  command: "{{ hermes_profile }} config set {{ hermes_key }} '{{ hermes_value }}'"
+  register: set_res
+  changed_when: set_res.rc == 0

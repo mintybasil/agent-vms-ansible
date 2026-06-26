@@ -1,0 +1,34 @@
+---
+# To use this playbook:
+# GH_TOKEN= \
+# MODEL_API_KEY= \
+# MODEL_API_FB_KEY= \
+# EXA_API_KEY= \
+# ansible-playbook playbooks/agents/cto-setup.yml
+
+- name: Configure CTO Agent
+  hosts: cto-vm
+  environment:
+    PATH: "{{ ansible_env['HOME'] }}/.local/bin:{{ ansible_env['PATH'] }}"
+  vars:
+    hermes_profile: "cto"
+    hermes_model_provider: "ollama-cloud"
+    hermes_model_base_url: "https://ollama.com/v1"
+    hermes_model_default: "glm-5.2"
+    hermes_model_api_key: "{{ lookup('env', 'MODEL_API_KEY') }}"
+    hermes_model_fallback_api_key: "{{ lookup('env', 'MODEL_API_FB_KEY') }}"
+    hermes_exa_api_key: "{{ lookup('env', 'EXA_API_KEY') }}"
+    hermes_gh_token: "{{ lookup('env', 'GH_TOKEN') }}"
+    hermes_gh_mcp_port: 8080
+
+  roles:
+    - role: hermes
+      vars:
+        hermes_enabled_tasks:
+          - profile
+          - config
+          - skills
+          - soul
+          - model
+          - exa_search
+          - gh_mcp

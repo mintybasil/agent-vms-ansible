@@ -1,0 +1,31 @@
+[Unit]
+Description=Hermes Agent Gateway - Messaging Platform Integration
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=600
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=debian
+Group=debian
+ExecStart=/home/debian/.hermes/hermes-agent/venv/bin/python -m hermes_cli.main --profile {{ hermes_profile }} gateway run --replace
+WorkingDirectory=/home/debian/.hermes/hermes-agent
+Environment="HOME=/home/debian"
+Environment="USER=debian"
+Environment="LOGNAME=debian"
+Environment="PATH=/home/debian/.hermes/hermes-agent/venv/bin:/home/debian/.hermes/hermes-agent/node_modules/.bin:/usr/bin:/home/debian/.local/bin:/home/debian/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="VIRTUAL_ENV=/home/debian/.hermes/hermes-agent/venv"
+Environment="HERMES_HOME=/home/debian/.hermes/profiles/{{ hermes_profile }}"
+Restart=on-failure
+RestartSec=30
+RestartForceExitStatus=75
+KillMode=mixed
+KillSignal=SIGTERM
+ExecReload=/bin/kill -USR1 $MAINPID
+TimeoutStopSec=90
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

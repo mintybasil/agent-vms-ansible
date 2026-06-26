@@ -23,16 +23,36 @@
     state: present
     reload: true
 
-- name: Gather VM bridge interface info
+# Build vm_networks from the vms list so the nftables template can generate
+# per-bridge rules. This mirrors the derivation in libvirt.yml.
+- name: Initialize vm_networks for nftables
   ansible.builtin.set_fact:
-    vm_bridge_iface: "{{ item }}"
-  loop: "{{ ansible_interfaces }}"
-  when: item.startswith('virbr')
+    vm_networks: []
 
-- name: Gather VM bridge IP info
+- name: Build per-VM network definitions for nftables
   ansible.builtin.set_fact:
-    vm_bridge_subnet: "{{ ansible_facts[vm_bridge_iface]['ipv4']['address'] }}/{{ ansible_facts[vm_bridge_iface]['ipv4']['prefix'] }}"
-  when: vm_bridge_iface is defined
+    vm_networks: "{{ vm_networks + [_net] }}"
+  vars:
+    _idx: "{{ vm_networks | length }}"
+    _net:
+      name: "{{ vm.name }}-net"
+      bridge: "{{ vm_bridge_prefix }}{{ '%02d' | format(vm_bridge_offset | int + _idx | int) }}"
+      subnet_octet: "{{ vm_subnet_base | int + _idx | int }}"
+      vm_ip: "{{ vm.ip }}"
+  loop: "{{ vms }}"
+  loop_control:
+    loop_var: vm
+    label: "{{ vm.name }}"
+
+- name: Build list of all VM subnet CIDRs
+  ansible.builtin.set_fact:
+    vm_subnet_cidrs: >-
+      {{
+        vm_networks
+        | map(attribute='subnet_octet')
+        | map('regex_replace', '^(.+)$', '10.200.\1.0/30')
+        | list
+      }}
 
 - name: Deploy nftables config
   ansible.builtin.template:

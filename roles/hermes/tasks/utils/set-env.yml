@@ -1,0 +1,8 @@
+---
+- name: "Set {{ hermes_key }} env var"
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_user_dir }}/.hermes/profiles/{{ hermes_profile }}/.env"
+    regexp: '^{{ hermes_key }}='
+    line: '{{ hermes_key }}={{ hermes_value }}'
+    create: true
+    mode: '0600'

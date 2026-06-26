@@ -1,0 +1,41 @@
+---
+- name: Hermes Services
+  hosts: agent_vms
+
+  pre_tasks:
+    - name: Install Docker
+      import_tasks: ../tasks/install_docker.yml
+      tags: [docker]
+    - name: Install Node.js
+      import_tasks: ../tasks/install_nodejs.yml
+      tags: [nodejs]
+    - name: Install Rust
+      import_tasks: ../tasks/install_rust.yml
+      tags: [rust]
+      become: true
+
+  roles:
+    - role: gh_mcp
+      tags: [gh_mcp]
+      vars:
+        gh_mcp_port: 8080
+
+    - role: gh_cli
+      tags: [gh_cli]
+      vars:
+        gh_cli_pat: "{{ lookup('env', 'GH_TOKEN') }}"
+
+    - role: obsidian
+      tags: [obsidian]
+      vars:
+        obsidian_token: "{{ lookup('env', 'OB_TOKEN') }}"
+        obsidian_vault_password: "{{ lookup('env', 'OB_VAULT_PW') }}"
+        obsidian_vault_id: "{{ lookup('env', 'OB_VAULT_ID') }}"
+        obsidian_vault_path: "/home/debian/ob-vault-{{ obsidian_vault_id }}"
+
+    - role: hermes
+      tags: [hermes]
+      vars:
+        hermes_commit: "2bd1977d8fad185c9b4be47884f7e87f1add0ce3" # v0.17.0 (v2026.6.19)
+        hermes_enabled_tasks:
+          - install

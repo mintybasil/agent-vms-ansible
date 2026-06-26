@@ -1,0 +1,5 @@
+hermes_home: "{{ ansible_facts['user_dir'] }}/.hermes/profiles/{{ hermes_profile }}"
+hermes_model_default: glm-5.2
+hermes_model_provider: ollama-cloud
+hermes_model_base_url: https://ollama.com/v1
+hermes_max_turns: 300

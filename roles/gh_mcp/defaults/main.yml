@@ -1,0 +1,3 @@
+---
+gh_mcp_toolsets: "default, actions, labels, git" # default includes: context, repos, issues, pull_requests, users
+gh_mcp_port: 8080

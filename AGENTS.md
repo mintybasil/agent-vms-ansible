@@ -26,12 +26,12 @@ ansible.cfg         # Project-level Ansible config
 
 | Role | Purpose |
 |---|---|
-| `host_setup` | Single role for host config: user, SSH hardening, libvirt (pool/network), nftables, Tailscale, Promtail. Each area is a task file invoked by tag: `user`, `ssh_hardening`, `libvirt`, `nftables`, `tailscale`, `promtail`. |
-| `host_vm_deploy` | Create one or more KVM VMs using libvirt + cloud-init; assumes libvirt pool and default NAT network from `host_setup` (tag `libvirt`) |
+| `host_setup` | Single role for host config: user, SSH hardening, libvirt (per-VM networks + pool), nftables, Tailscale, Promtail. Each area is a task file invoked by tag: `user`, `ssh_hardening`, `libvirt`, `nftables`, `tailscale`, `promtail`. |
+| `host_vm_deploy` | Create one or more KVM VMs using libvirt + cloud-init; assumes per-VM networks and storage pool from `host_setup` (tag `libvirt`) |
 | `vm_setup` | VM-level network/interface config (e.g. static interfaces); not currently wired into a playbook |
 | `caddy` | Install Caddy + generate Caddyfile from template |
 
-One-time host resources (packages, libvirt `default` NAT network, storage pool, base Debian cloud image) are set up by `host_setup` (tag `libvirt`) and `host_vm_deploy` respectively. The `host_vm_deploy` role loops over a `vms` list; per-VM resources (disk copy, cloud-init ISO, libvirt domain) are created for each entry.
+One-time host resources (packages, per-VM libvirt NAT networks, storage pool, base Debian cloud image) are set up by `host_setup` (tag `libvirt`) and `host_vm_deploy` respectively. The `host_vm_deploy` role loops over a `vms` list; per-VM resources (disk copy, cloud-init ISO, libvirt domain, dedicated network) are created for each entry.
 
 ---
 
@@ -53,6 +53,7 @@ Two host types:
 |---|---|---|
 | `host_user` | inventory/hosts.yml | SSH user on host |
 | `host_ssh_port` | inventory/hosts.yml | Default 22; change it |
+| `vm_interconnects` | inventory/hosts.yml | List of inter-VM allow rules (from, to, port); default `[]` |
 | `promtail_enabled` | inventory/hosts.yml | Set `true` to enable log shipping |
 | `caddy_basicauth_user` | inventory/hosts.yml | Basic auth username for Caddy |
 | `caddy_basicauth_hash` | inventory/hosts.yml | Bcrypt hash via `caddy hash-password` |
@@ -61,18 +62,35 @@ Caddy site domain and TLS cert/key paths are derived from `tailscale status --pe
 
 ### VM list (`vms`)
 
-VMs are defined as a list in `inventory/hosts.yml`. Each entry creates one libvirt domain.
+VMs are defined as a list in `inventory/hosts.yml`. Each entry creates one libvirt domain with its own isolated network.
 
 | Field | Required | Default | Notes                                                |
-|---|---|---|------------------------------------------------------|
+|---|---|---|---|
 | `name` | ✅ | — | VM hostname + libvirt domain name; must be unique    |
-| `ip` | ✅ | — | Static IP on the libvirt NAT network (192.168.122.x) |
+| `ip` | ✅ | — | Static IP on the VM's dedicated NAT network (10.200.N.2) |
 | `ssh_public_key` | ✅ | — | SSH public key for `vm.user`                         |
 | `disk_size` | | `20G` | Passed to `qemu-img resize`                          |
 | `memory_mib` | | `4096` | RAM in MiB                                           |
-| `vcpus` | | `4` | vCPU count                                           |
+| `vcpus` | | `4` | vCPU count                            |
 | `network_iface` | | `enp1s0` | Guest NIC name (consistent for virtio-net)           |
 | `user` | | `debian` | System user                                          |
+
+### Per-VM Network Isolation
+
+Each VM gets its own libvirt network (`<name>-net`) with a dedicated bridge (`vmbrNN`) and /30 subnet (`10.200.N.0/30`). This ensures inter-VM traffic must traverse the host's FORWARD chain where nftables can filter it.
+
+Inter-VM traffic is **denied by default**. To allow a specific flow, add an entry to `vm_interconnects`:
+
+```yaml
+vm_interconnects:
+  - from: agent-vm-1    # source VM name (must match vms[].name)
+    to: agent-vm-2      # destination VM name
+    port: 8080          # TCP port to allow
+```
+
+Network bridge and subnet assignments are derived from the VM's position in the `vms` list:
+- Bridge: `vmbr{offset + index}` (default offset: 10, so vmbr10, vmbr11, ...)
+- Subnet: `10.200.{base + index}.0/30` (default base: 0, so 10.200.0.0/30, 10.200.1.0/30, ...)
 
 Secrets (`tailscale_auth_key`, passwords) are passed via `-e` at runtime — **never commit them**.
 

@@ -1,0 +1,22 @@
+---
+- name: Download install script
+  ansible.builtin.get_url:
+    url: https://hermes-agent.nousresearch.com/install.sh
+    dest: /tmp/hermes-install.sh
+    mode: '0755'
+
+- name: Run install script
+  ansible.builtin.command: "/tmp/hermes-install.sh --non-interactive --commit {{ hermes_commit }}"
+  args:
+    creates: "{{ ansible_facts['user_dir'] }}/.hermes"
+  async: 900        # max runtime in seconds (15 min, padding over the ~10 min expected)
+  poll: 0           # check status every 15s; set to 0 to fire-and-forget
+  register: script_job
+
+- name: Check script result
+  ansible.builtin.async_status:
+    jid: "{{ script_job.ansible_job_id }}"
+  register: job_result
+  until: job_result.finished
+  retries: 60
+  delay: 15

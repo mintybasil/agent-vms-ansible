@@ -1,0 +1,12 @@
+---
+- name: Install rustup
+  become: true
+  ansible.builtin.apt:
+    pkg: rustup
+    state: present
+    update_cache: true
+
+- name: Install default toolchain
+  ansible.builtin.command: "rustup default stable"
+  args:
+    creates: ".rustup/toolchains/stable-x86_64-unknown-linux-gnu/"

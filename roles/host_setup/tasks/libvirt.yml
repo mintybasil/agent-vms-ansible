@@ -13,33 +13,67 @@
     state: present
     update_cache: true
 
-- name: Define libvirt default network
-  ansible.builtin.command:
-    cmd: virsh net-define /dev/stdin
-    stdin: "{{ lookup('file', 'network.xml') }}"
-  register: net_define
-  changed_when: net_define.rc == 0
-  failed_when: net_define.rc != 0 and 'already exists' not in net_define.stderr
-
-- name: Start libvirt default network
-  ansible.builtin.command:
-    cmd: virsh net-start default
-  register: virsh_net_start
-  changed_when: false
-  failed_when: virsh_net_start.rc != 0 and 'already active' not in (virsh_net_start.stderr | default(''))
-
-- name: Set libvirt default network to autostart
-  ansible.builtin.command:
-    cmd: virsh net-autostart default
-  register: virsh_net_autostart
-  changed_when: false
-  failed_when: virsh_net_autostart.rc != 0
-
 - name: Ensure libvirtd is running
   ansible.builtin.systemd:
     name: libvirtd
     state: started
     enabled: true
+
+# Per-VM isolated networks. Each VM gets its own bridge and /30 subnet so that
+# inter-VM traffic must traverse the host FORWARD chain where nftables can
+# apply default-deny + explicit allow rules.
+- name: Initialize vm_networks
+  ansible.builtin.set_fact:
+    vm_networks: []
+
+- name: Build per-VM network definitions from vms list
+  ansible.builtin.set_fact:
+    vm_networks: "{{ vm_networks + [_net] }}"
+  vars:
+    _idx: "{{ vm_networks | length }}"
+    _net:
+      name: "{{ vm.name }}-net"
+      bridge: "{{ vm_bridge_prefix }}{{ '%02d' | format(vm_bridge_offset | int + _idx | int) }}"
+      subnet_octet: "{{ vm_subnet_base | int + _idx | int }}"
+      vm_ip: "{{ vm.ip }}"
+  loop: "{{ vms }}"
+  loop_control:
+    loop_var: vm
+    label: "{{ vm.name }}"
+
+- name: Define per-VM libvirt networks
+  ansible.builtin.command:
+    cmd: "virsh net-define /dev/stdin"
+    stdin: "{{ lookup('template', 'network.xml.j2') }}"
+  register: net_define
+  changed_when: net_define.rc == 0
+  failed_when: net_define.rc != 0 and 'already exists' not in net_define.stderr
+  loop: "{{ vm_networks }}"
+  loop_control:
+    loop_var: network
+    label: "{{ network.name }}"
+
+- name: Start per-VM libvirt networks
+  ansible.builtin.command:
+    cmd: "virsh net-start {{ network.name }}"
+  register: virsh_net_start
+  changed_when: false
+  failed_when: virsh_net_start.rc != 0 and 'already active' not in (virsh_net_start.stderr | default(''))
+  loop: "{{ vm_networks }}"
+  loop_control:
+    loop_var: network
+    label: "{{ network.name }}"
+
+- name: Set per-VM networks to autostart
+  ansible.builtin.command:
+    cmd: "virsh net-autostart {{ network.name }}"
+  register: virsh_net_autostart
+  changed_when: false
+  failed_when: virsh_net_autostart.rc != 0
+  loop: "{{ vm_networks }}"
+  loop_control:
+    loop_var: network
+    label: "{{ network.name }}"
 
 # The storage pool is shared across all VMs — images are distinguished by name.
 - name: Check if default pool exists
