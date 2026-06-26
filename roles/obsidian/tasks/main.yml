@@ -9,14 +9,14 @@
   ansible.builtin.file:
     path: "~/.config/obsidian-headless"
     state: directory
-    mode: '0600'
+    mode: '0700'
 
 - name: Deploy auth key
   ansible.builtin.copy:
     content: "{{ obsidian_token | trim }}"
     dest: "~/.config/obsidian-headless/auth_token"
     mode: '0600'
-  no_log: true
+#  no_log: true
 
 - name: Verify authentication
   ansible.builtin.command: "ob sync-list-remote"
@@ -26,7 +26,7 @@
   ansible.builtin.file:
     path: "{{ obsidian_vault_path }}"
     state: directory
-    mode: '0600'
+    mode: '0700'
 
 - name: Connect remote vault
   ansible.builtin.command: "ob sync-setup --vault {{ obsidian_vault_id }} --path {{ obsidian_vault_path }} --password {{ obsidian_vault_password }}"

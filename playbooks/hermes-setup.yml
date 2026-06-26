@@ -5,18 +5,20 @@
   pre_tasks:
     - name: Install Docker
       import_tasks: ../tasks/install_docker.yml
-      tags: [install, install_docker]
+      tags: [docker]
     - name: Install Node.js
       import_tasks: ../tasks/install_nodejs.yml
-      tags: [install, install_nodejs]
+      tags: [nodejs]
     - name: Install Rust
       import_tasks: ../tasks/install_rust.yml
-      tags: [install, install_rust]
+      tags: [rust]
       become: true
 
   roles:
     - role: gh_mcp
       tags: [gh_mcp]
+      vars:
+        gh_mcp_port: 8080
 
     - role: gh_cli
       tags: [gh_cli]
@@ -33,3 +35,6 @@
 
     - role: hermes
       tags: [hermes]
+      vars:
+        hermes_enabled_tasks:
+          - install

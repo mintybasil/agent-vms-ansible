@@ -1,0 +1,30 @@
+---
+- name: Configure Yoke Agent
+  hosts: yoke-agents-vm
+  environment:
+    PATH: "{{ ansible_env['HOME'] }}/.local/bin:{{ ansible_env['PATH'] }}"
+  vars:
+    hermes_profile: "{{ lookup('env', 'PROFILE') }}"
+    hermes_api_port: "{{ lookup('env', 'API_PORT') }}"
+    hermes_api_secret: "{{ lookup('env', 'API_SECRET') }}"
+    hermes_model_provider: "ollama-cloud"
+    hermes_model_base_url: "https://ollama.com/v1"
+    hermes_model_default: "glm-5.2"
+    hermes_model_api_key: "{{ lookup('env', 'MODEL_API_KEY') }}"
+    hermes_model_fallback_api_key: "{{ lookup('env', 'MODEL_API_FB_KEY') }}"
+    hermes_exa_api_key: "{{ lookup('env', 'EXA_API_KEY') }}"
+    hermes_gh_token: "{{ lookup('env', 'GH_TOKEN') }}"
+    hermes_gh_mcp_port: 8080
+
+  roles:
+    - role: hermes
+      vars:
+        hermes_enabled_tasks:
+          - profile
+          - config
+          - api
+          - skills
+          - soul
+          - model
+          - exa_search
+          - gh_mcp

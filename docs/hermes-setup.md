@@ -11,9 +11,9 @@ Additionally, it installs `docker` and `node` which are sub-dependencies for the
 
 > Make sure to update your hosts.yml to include `agent_vms` with your target hosts.
 
-## 1. Install Docker & Nodejs
+## 1. Install Docker, Nodejs & Rust
 ```shell
-ansible-playbook playbooks/hermes-setup.yml --tags install_docker,install_nodejs
+ansible-playbook playbooks/hermes-setup.yml --tags docker,nodejs,rust
 ```
 
 ## 2. Install Github CLI & MCP server

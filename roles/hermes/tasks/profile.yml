@@ -1,0 +1,11 @@
+---
+- name: Check if profile exists
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['user_dir'] }}/.hermes/profiles/{{ hermes_profile }}"
+  register: profile_stat
+
+- name: Create hermes profile
+  when: not profile_stat.stat.exists
+  ansible.builtin.command: "hermes profile create {{ hermes_profile }}"
+  register: profile_cmd
+  changed_when: profile_cmd.rc == 0

@@ -1,0 +1,35 @@
+---
+- name: Enable API
+  import_tasks: utils/set-env.yml
+  vars:
+    hermes_key: "API_SERVER_ENABLED"
+    hermes_value: "true"
+
+- name: Set API port
+  import_tasks: utils/set-env.yml
+  vars:
+    hermes_key: "API_SERVER_PORT"
+    hermes_value: "{{ hermes_api_port }}"
+
+- name: Set API secret
+  import_tasks: utils/set-env.yml
+  vars:
+    hermes_key: "API_SERVER_KEY"
+    hermes_value: "{{ hermes_api_secret }}"
+
+- name: Deploy gateway service
+  become: true
+  ansible.builtin.template:
+    src: gateway.service.j2
+    dest: "/etc/systemd/system/hermes-gateway-{{ hermes_profile }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Enable and start gateway
+  become: true
+  ansible.builtin.systemd:
+    name: "hermes-gateway-{{ hermes_profile }}"
+    state: restarted
+    enabled: true
+    daemon_reload: true

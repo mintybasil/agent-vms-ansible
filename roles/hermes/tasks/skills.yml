@@ -1,0 +1,17 @@
+---
+- name: Opt-out of bundled skills
+  ansible.builtin.command: "{{ hermes_profile }} skills opt-out --remove --yes"
+  register: opt_out_result
+  changed_when: opt_out_result.rc == 0
+
+- name: Setup skillz repo
+  ansible.builtin.git:
+    repo: 'https://github.com/mintybasil/skillz.git'
+    dest: "{{ ansible_facts['user_dir'] }}/skillz"
+    version: main
+
+- name: Add external dir to config
+  ansible.builtin.import_tasks: utils/set-config.yml
+  vars:
+    hermes_key: "skills.external_dirs"
+    hermes_value: "{{ ansible_facts['user_dir'] }}/skillz/skills"

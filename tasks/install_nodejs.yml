@@ -15,6 +15,7 @@
         mode: '0755'
 
     - name: Run install script
+      become: true
       ansible.builtin.command: "/tmp/nodesource-install.sh"
       args:
         creates: "/etc/apt/sources.list.d/nodesource.sources"

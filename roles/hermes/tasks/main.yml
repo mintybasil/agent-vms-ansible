@@ -1,4 +1,4 @@
 ---
-- name: Install hermes
-  tags: [install, hermes_install]
-  import_tasks: install.yml
+- name: Run selected tasks
+  loop: "{{ hermes_enabled_tasks }}"
+  include_tasks: "{{ item }}.yml"

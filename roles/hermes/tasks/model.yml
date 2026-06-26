@@ -1,0 +1,41 @@
+---
+- name: Configure model provider
+  import_tasks: utils/set-config.yml
+  vars:
+    hermes_key: "model.provider"
+    hermes_value: "{{ hermes_model_provider }}"
+
+- name: Configure model provider base url
+  import_tasks: utils/set-config.yml
+  vars:
+    hermes_key: "model.base_url"
+    hermes_value: "{{ hermes_model_base_url }}"
+
+- name: Configure default model
+  import_tasks: utils/set-config.yml
+  vars:
+    hermes_key: "model.default"
+    hermes_value: "{{ hermes_model_default }}"
+
+- name: Set model API key
+  ansible.builtin.import_tasks: utils/set-env.yml
+  vars:
+    hermes_key: "OLLAMA_API_KEY"
+    hermes_value: "{{ hermes_model_api_key }}"
+
+- name: Setup fallback model API key
+  when: hermes_model_fallback_api_key != ""
+  block:
+    - name: Remove existing key if present
+      ansible.builtin.command:
+        cmd: "{{ hermes_profile }} auth remove {{ hermes_model_provider }} fallback"
+        stdin: ""
+      register: remove_fallback
+      changed_when: remove_fallback.rc == 0
+      failed_when: false # Ignore failures, key may not exist
+
+    - name: Add fallback API key
+      ansible.builtin.command:
+        cmd: "{{ hermes_profile }} auth add {{ hermes_model_provider }} --api-key {{ hermes_model_fallback_api_key }} --label fallback"
+      register: auth_result
+      changed_when: auth_result.rc == 0

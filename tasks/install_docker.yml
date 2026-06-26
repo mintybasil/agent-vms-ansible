@@ -9,18 +9,22 @@
   when: docker_exists.rc != 0
   block:
     - name: Add GPG key
+      become: true
       ansible.builtin.get_url:
         url: https://download.docker.com/linux/debian/gpg
         dest: /etc/apt/keyrings/docker.asc
         mode: '0644'
 
     - name: Add Docker repository into sources list
+      become: true
       ansible.builtin.apt_repository:
-        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable"
+        repo: >
+          "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian {{ ansible_facts['distribution_release'] }} stable"
         state: present
         update_cache: true
 
     - name: Install Docker
+      become: true
       ansible.builtin.apt:
         pkg:
           - docker-ce
@@ -30,7 +34,15 @@
           - docker-compose-plugin
 
 - name: Confirm docker is running
+  become: true
   ansible.builtin.service:
     name: docker
     state: started
     enabled: true
+
+- name: Add user to docker group
+  become: true
+  ansible.builtin.user:
+    user: "{{ ansible_facts['user_id'] }}"
+    groups: docker
+    append: true
