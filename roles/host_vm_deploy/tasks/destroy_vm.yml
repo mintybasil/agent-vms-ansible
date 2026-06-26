@@ -7,13 +7,12 @@
 #   - VM cloud-init config directory under vm_cloud_init_base_path
 #   - Per-VM libvirt network (<name>-net)
 
-- name: Set derived facts for {{ vm.name }}
+- name: "{{ vm.name }} | Set derived facts"
   ansible.builtin.set_fact:
-    vm: "{{ vm_pair.0 }}"
-    _vm_disk_image: "{{ vm_pair.0.name }}-{{ vm_debian_cloud_image }}"
-    _vm_seed_iso: "{{ vm_pair.0.name }}-seed.iso"
-    _vm_cloud_init_path: "{{ vm_cloud_init_base_path }}/{{ vm_pair.0.name }}"
-    _vm_network_name: "{{ vm_pair.0.name }}-net"
+    _vm_disk_image: "{{ vm.name }}-{{ vm_debian_cloud_image }}"
+    _vm_seed_iso: "{{ vm.name }}-seed.iso"
+    _vm_cloud_init_path: "{{ vm_cloud_init_base_path }}/{{ vm.name }}"
+    _vm_network_name: "{{ vm.name }}-net"
 
 - name: List defined VMs for {{ vm.name }}
   community.libvirt.virt:

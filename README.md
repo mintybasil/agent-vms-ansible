@@ -19,6 +19,7 @@ Hardened VM deployments for running agents.
   - [Configuring VMs](#configuring-vms)
   - [Destroying VMs](#destroying-vms)
 - [Additional Notes](#additional-notes)
+  - [Inter-VM Networking](#inter-vm-networking)
   - [Tailscale ACL Setup](#tailscale-acl-setup)
 
 # Usage
@@ -144,6 +145,24 @@ See [Hermes Agent Setup](/docs/hermes-setup.md) for how to configure a VM for He
    ```
 
 # Additional Notes
+
+## Inter-VM Networking
+
+Each VM gets its own libvirt network (`<name>-net`) with a dedicated bridge (`vmbrNN`) and /30 subnet (`10.200.N.0/30`). This ensures inter-VM traffic must traverse the host's FORWARD chain where nftables can filter it.
+
+Inter-VM traffic is **denied by default**. To allow a specific flow, add an entry to `vm_interconnects`:
+
+```yaml
+vm_interconnects:
+  - from: agent-vm-1    # source VM name (must match vms[].name)
+    to: agent-vm-2      # destination VM name
+    port: 8080          # TCP port to allow
+```
+
+Network bridge and subnet assignments are derived from the VM's position in the `vms` list:
+- Bridge: `vmbr{offset + index}` (default offset: 10, so vmbr10, vmbr11, ...)
+- Subnet: `10.200.{base + index}.0/30` (default base: 0, so 10.200.0.0/30, 10.200.1.0/30, ...)
+
 
 ## Tailscale ACL Setup
 
