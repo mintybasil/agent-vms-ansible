@@ -6,7 +6,7 @@
     mode: '0755'
 
 - name: Run install script
-  ansible.builtin.command: "/tmp/hermes-install.sh --non-interactive"
+  ansible.builtin.command: "/tmp/hermes-install.sh --non-interactive --commit {{ hermes_commit }}"
   args:
     creates: "{{ ansible_facts['user_dir'] }}/.hermes"
   async: 900        # max runtime in seconds (15 min, padding over the ~10 min expected)

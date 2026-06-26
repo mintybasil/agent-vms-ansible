@@ -36,5 +36,6 @@
     - role: hermes
       tags: [hermes]
       vars:
+        hermes_commit: "2bd1977d8fad185c9b4be47884f7e87f1add0ce3" # v0.17.0 (v2026.6.19)
         hermes_enabled_tasks:
           - install
