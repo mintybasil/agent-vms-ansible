@@ -1,22 +1,17 @@
 ---
 # To use this playbook:
-# PROFILE= \
-# API_PORT= \
-# API_SECRET= \
 # GH_TOKEN= \
 # MODEL_API_KEY= \
 # MODEL_API_FB_KEY= \
 # EXA_API_KEY= \
-# ansible-playbook playbooks/agents/yoke-agent-setup.yml
+# ansible-playbook playbooks/agents/cto-setup.yml
 
-- name: Configure Yoke Agent
-  hosts: yoke-agents-vm
+- name: Configure CTO Agent
+  hosts: cto-vm
   environment:
     PATH: "{{ ansible_env['HOME'] }}/.local/bin:{{ ansible_env['PATH'] }}"
   vars:
-    hermes_profile: "{{ lookup('env', 'PROFILE') }}"
-    hermes_api_port: "{{ lookup('env', 'API_PORT') }}"
-    hermes_api_secret: "{{ lookup('env', 'API_SECRET') }}"
+    hermes_profile: "cto"
     hermes_model_provider: "ollama-cloud"
     hermes_model_base_url: "https://ollama.com/v1"
     hermes_model_default: "glm-5.2"
@@ -32,7 +27,6 @@
         hermes_enabled_tasks:
           - profile
           - config
-          - api
           - skills
           - soul
           - model
