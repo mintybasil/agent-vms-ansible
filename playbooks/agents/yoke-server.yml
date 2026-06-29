@@ -12,9 +12,9 @@
         owner: mintybasil
     yoke_agents:
       - name: pm
-        url: "http://localhost:8500"
+        url: "http://10.200.0.3:8500"
       - name: swe
-        url: "http://localhost:8501"
+        url: "http://10.200.0.3:8501"
 
   pre_tasks:
     - name: Install docker

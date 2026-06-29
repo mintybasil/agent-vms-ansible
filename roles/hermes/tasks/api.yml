@@ -5,6 +5,12 @@
     hermes_key: "API_SERVER_ENABLED"
     hermes_value: "true"
 
+- name: Set API host
+  import_tasks: utils/set-env.yml
+  vars:
+    hermes_key: "API_SERVER_HOST"
+    hermes_value: "{{ hermes_api_host }}"
+
 - name: Set API port
   import_tasks: utils/set-env.yml
   vars:
