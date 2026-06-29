@@ -1,6 +1,6 @@
 yoke_docker_image: "ghcr.io/mintybasil/yoke:latest"
 yoke_container_name: "yoke"
-yoke_log_level: "debug"
+yoke_log_level: "info"
 yoke_data_dir: "{{ ansible_facts['user_dir'] }}/yoke"
 yoke_workflows_ref: "main"
 yoke_workflow_path: "/workflows"

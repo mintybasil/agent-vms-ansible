@@ -1,22 +1,28 @@
+# Yoke Server Setup
+
+## Pre-requisites
+
+- Hermes agent deployed with API and inter-VM networking enabled (Yoke -> Hermes)
+- Gtihub PAT
 
 ## Basic Usage
 
 > [!IMPORTANT]
 > Ensure you run `ansible-galaxy collection install -r requirements.yml -p ./collections` to fetch the required collections.
 
-### 1. Install docker
+### 1. Install Docker
 
 ```shell
 ansible-playbook playbooks/agents/yoke-server.yml --tags install_docker
 ```
 
-### 2. Setup webhooks
+### 2. Setup Webhooks
 
 ```shell
  GH_TOKEN=<token> WEBHOOK_SECRET=<secret> ansible-playbook playbooks/agents/yoke-server.yml --tags setup
 ```
 
-### 3. Start Yoke server
+### 3. Start Yoke Server
 ```shell
  GH_TOKEN=<token> WEBHOOK_SECRET=<secret> HERMES_API_KEY=<key> ansible-playbook playbooks/agents/yoke-server.yml --tags run
 ```
@@ -30,7 +36,7 @@ ansible-playbook playbooks/agents/yoke-server.yml --tags install_docker
 
 ### Stop Yoke Server
 ```shell
- nsible-playbook playbooks/agents/yoke-server.yml --tags stop
+ ansible-playbook playbooks/agents/yoke-server.yml --tags stop
 ```
 
 ### Pull Latest Docker Image

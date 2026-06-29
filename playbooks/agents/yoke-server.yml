@@ -1,5 +1,5 @@
 ---
-- name: Configure Yoke Server
+- name: Yoke Server
   hosts: yoke-server-vm
   vars:
     yoke_pull_image: true

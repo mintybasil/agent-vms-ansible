@@ -5,13 +5,7 @@
     mode: "0755"
     state: directory
 
-- name: Check if workflows exist
-  ansible.builtin.stat:
-    path: "{{ yoke_data_dir }}/yoke-workflows"
-  register: workflows_stat
-
 - name: Clone/pull workflows # noqa: latest[git]
-  when: not workflows_stat.stat.exists
   ansible.builtin.git:
     repo: "https://github.com/mintybasil/yoke-workflows"
     dest: "{{ yoke_data_dir }}/yoke-workflows"

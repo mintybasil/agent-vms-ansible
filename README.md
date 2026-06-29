@@ -138,6 +138,8 @@ rm -rf /path/to/disk.qcow2.bak
 
 See [Hermes Agent Setup](/docs/hermes-setup.md) for how to configure a VM for Hermes.
 
+See [Yoke Server Setup](/docs/yoke-server.md) for deploying [Yoke](https://github.com/mintybasil/yoke).
+
 ## Destroying VMs
 
 1. Destroy a VM (domain + disk + seed ISO + cloud-init files):
