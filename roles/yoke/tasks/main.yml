@@ -1,0 +1,59 @@
+---
+- name: Pull latest image
+  tags: [never, pull]
+  community.docker.docker_image:
+    name: "{{ yoke_docker_image }}"
+    force_source: true
+    source: pull
+  register: pull_result
+
+- name: Print image commit
+  when: pull_result.image is defined
+  debug:
+    msg: "Using yoke commit {{ pull_result.image.Config.Labels['org.opencontainers.image.revision'] }}"
+
+- name: Setup
+  tags: [never, setup]
+  block:
+    - name: Setup workflows
+      ansible.builtin.import_tasks: "./workflows.yml"
+
+    - name: Deploy config
+      ansible.builtin.import_tasks: "./config.yml"
+
+    - name: Configure Tailscale funnel
+      ansible.builtin.command: "tailscale funnel --bg {{ yoke_server_port }}"
+      changed_when: false
+
+    - name: Setup webhooks
+      ansible.builtin.import_tasks: "./webhook-cmd.yml"
+      vars:
+        yoke_docker_command: "webhooks add"
+
+- name: Run
+  tags: [never, run]
+  ansible.builtin.import_tasks: "./docker.yml"
+  vars:
+    yoke_server_state: "started"
+
+- name: Stop
+  tags: [never, stop]
+  ansible.builtin.import_tasks: "./docker.yml"
+  vars:
+    yoke_server_state: "stopped"
+
+- name: List webhooks
+  tags: [never, list_webhooks]
+  ansible.builtin.import_tasks: "./webhook-cmd.yml"
+  vars:
+    yoke_docker_command: "webhooks list"
+
+- name: Remove webhooks
+  tags: [never, remove_webhooks]
+  ansible.builtin.import_tasks: "./webhook-cmd.yml"
+  vars:
+    yoke_docker_command: "webhooks remove"
+
+- name: Update workflows
+  tags: [never, update_workflows]
+  ansible.builtin.import_tasks: "./workflows.yml"

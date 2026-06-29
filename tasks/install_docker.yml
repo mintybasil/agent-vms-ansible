@@ -18,9 +18,10 @@
     - name: Add Docker repository into sources list
       become: true
       ansible.builtin.apt_repository:
-        repo: >
-          "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian {{ ansible_facts['distribution_release'] }} stable"
-        state: present
+        repo: >-
+          deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc]
+          https://download.docker.com/linux/debian
+          {{ ansible_facts['distribution_release'] }} stable        state: present
         update_cache: true
 
     - name: Install Docker

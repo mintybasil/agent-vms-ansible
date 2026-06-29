@@ -28,6 +28,7 @@ Hardened VM deployments for running agents.
 - Host with fresh Debian 13 install
 - Tailscale account (+ auth keys) with HTTPs enabled
 - `inventory/hosts.yml` is set with the IP/hostname of your host machine
+- Ansible collections (`ansible-galaxy collection install -r requirements.yml -p ./collections`, or see requirements.yml)
 
 ## Host Setup
 
@@ -173,7 +174,7 @@ It is **strongly** recommended to ensure your Tailscale ACL configuration is set
 Create two tags - `personal` and `agents`. Assign `personal` to devices you use to access the host/VM. Assign `agents` to the host/VM (can be done when generating auth key).
 
 Apply an ACL rule:
-```json
+```
 {
     "src": ["tag:personal"],
     "dst": ["tag:agents"],
@@ -185,7 +186,7 @@ Apply an ACL rule:
 
 Create one tag (eg. `agents`), and assign it to the Host/VM (can be done when generating auth key).
 
-```json
+```
 {
     "src": ["*"],
     "dst": ["tag:agents"],
