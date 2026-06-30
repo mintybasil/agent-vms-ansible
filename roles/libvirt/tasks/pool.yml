@@ -9,11 +9,11 @@
     name: default
     state: present
     xml: "{{ lookup('template', 'pool.xml.j2') }}"
-  when: "'default' not in pools.list_pools"
+  when: libvirt_pool_name not in pools.list_pools
 
 - name: Ensure default pool is active and autostarts
   community.libvirt.virt_pool:
-    name: default
+    name: "{{ libvirt_pool_name }}"
     state: active
     autostart: true
-  when: "'default' not in pools.list_pools"
+  when: libvirt_pool_name not in pools.list_pools
