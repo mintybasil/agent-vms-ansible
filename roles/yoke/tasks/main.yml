@@ -22,6 +22,7 @@
       ansible.builtin.import_tasks: "./config.yml"
 
     - name: Configure Tailscale funnel
+      become: true
       ansible.builtin.command: "tailscale funnel --bg {{ yoke_server_port }}"
       changed_when: false
 
