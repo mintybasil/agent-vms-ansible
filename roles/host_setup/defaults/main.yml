@@ -10,22 +10,6 @@ vm_allowed_outbound_ports:
   - 41641 # Direct WireGuard (Tailscale)
   - 3478 # STUN for NAT traversal
 
-# Per-VM network isolation. Each VM gets its own libvirt network with a
-# dedicated bridge interface and /30 subnet. Inter-VM traffic is denied by
-# default; explicit allows are listed in vm_interconnects.
-vm_bridge_prefix: "vmbr"
-vm_bridge_offset: 10
-vm_subnet_base: 0
-
-# Inter-VM allow rules. Each entry allows source VM to reach destination VM
-# on a specific TCP port. VM names must match the `name` field in `vms`.
-# Example:
-#   vm_interconnects:
-#     - from: agent-vm-1
-#       to: agent-vm-2
-#       port: 8080
-vm_interconnects: []
-
 # --- tailscale ---
 tailscale_up_extra_args: ""
 
