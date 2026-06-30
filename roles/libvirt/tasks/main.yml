@@ -8,9 +8,9 @@
   ansible.builtin.import_tasks: pool.yml
 
 - name: Configure network interfaces
-  tags: [never, network]
+  tags: [network]
   ansible.builtin.import_tasks: networking.yml
 
 - name: Update vms
-  tags: [never, vms]
+  tags: [vms]
   ansible.builtin.import_tasks: vms.yml
