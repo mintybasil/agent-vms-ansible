@@ -1,0 +1,19 @@
+---
+- name: "Run yoke server | state={{ yoke_server_state }}"
+  community.docker.docker_container:
+    name: "{{ yoke_container_name }}"
+    image: "{{ yoke_docker_image }}"
+    restart_policy: unless-stopped
+    volumes:
+      - "{{ yoke_data_dir }}/config.toml:/config.toml"
+      - "{{ yoke_data_dir }}/yoke-workflows/workflows:/workflows"
+      - "{{ yoke_data_dir }}/data:/yoke"
+    env:
+      HERMES_API_KEY: "{{ yoke_hermes_api_key }}"
+      GITHUB_TOKEN: "{{ yoke_gh_token }}"
+      WEBHOOK_SECRET: "{{ yoke_webhook_secret }}"
+      RUST_LOG: "{{ yoke_log_level }}"
+    ports:
+      - "{{ yoke_server_port }}:{{ yoke_server_port }}"
+    command: "--config /config.toml --workflows /workflows"
+    state: "{{ yoke_server_state | default('started') }}"

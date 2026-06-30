@@ -1,0 +1,23 @@
+---
+- name: "Run yoke command | {{ yoke_docker_command }}"
+  community.docker.docker_container:
+    name: "yoke-webhooks"
+    image: "{{ yoke_docker_image }}"
+    detach: false
+    recreate: true
+    env:
+      GITHUB_TOKEN: "{{ yoke_gh_token }}"
+      WEBHOOK_SECRET: "{{ yoke_webhook_secret }}"
+      RUST_LOG: "{{ yoke_log_level }}"
+    volumes:
+      - "{{ yoke_data_dir }}/config.toml:/config.toml"
+      - "{{ yoke_data_dir }}/yoke-workflows/workflows:/workflows"
+      - "{{ yoke_data_dir }}/data:/yoke"
+    command: "--config /config.toml --workflows /workflows {{ yoke_docker_command }}"
+  register: docker_output
+  failed_when: docker_output.status != 0
+
+- name: Print logs
+  when: docker_output.container.Output is defined
+  debug:
+    msg: "{{ docker_output.container.Output.split('\n') }}"

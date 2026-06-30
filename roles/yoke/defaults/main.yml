@@ -1,0 +1,13 @@
+yoke_docker_image: "ghcr.io/mintybasil/yoke:latest"
+yoke_container_name: "yoke"
+yoke_log_level: "info"
+yoke_data_dir: "{{ ansible_facts['user_dir'] }}/yoke"
+yoke_workflows_ref: "main"
+yoke_workflow_path: "/workflows"
+
+yoke_platform: "github"
+yoke_max_concurrent: 1
+yoke_workdir: "/yoke" # Container directory for artifacts
+yoke_drain_timeout_secs: 600 # 10mins, wait for in-flight workflows on shutdown
+yoke_server_host: "0.0.0.0"
+yoke_server_port: "8644"

@@ -1,0 +1,25 @@
+platform = "{{ yoke_platform }}"
+
+repos = [
+{% for repo in yoke_repos %}
+    { owner = "{{ repo.owner }}", repo = "{{ repo.name }}" },
+{% endfor %}
+]
+
+{% for agent in yoke_agents %}
+[[agents]]
+name = "{{ agent.name }}"
+base_url = "{{ agent.url }}"
+{% endfor %}
+
+# Runtime settings
+[runtime]
+max_concurrent = {{ yoke_max_concurrent }}          # max concurrent workflow runs (0 = unlimited)
+workdir = "{{ yoke_workdir }}"         # runtime data directory
+drain_timeout_secs = {{ yoke_drain_timeout_secs }}  # seconds to wait for in-flight workflows on shutdown (600 => 10mins)
+
+# Server settings
+[server]
+host = "{{ yoke_server_host }}"
+port = {{ yoke_server_port }}
+webhook_host = "{{ yoke_webhook_host }}"

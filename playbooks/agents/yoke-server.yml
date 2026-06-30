@@ -1,0 +1,25 @@
+---
+- name: Yoke Server
+  hosts: yoke-server-vm
+  vars:
+    yoke_pull_image: true
+    yoke_log_level: "info,yoke=debug"
+    yoke_gh_token: "{{ lookup('env', 'GH_TOKEN') }}"
+    yoke_webhook_secret: "{{ lookup('env', 'WEBHOOK_SECRET') }}"
+    yoke_hermes_api_key: "{{ lookup('env', 'HERMES_API_KEY') }}"
+    yoke_repos:
+      - name: yoke
+        owner: mintybasil
+    yoke_agents:
+      - name: pm
+        url: "http://10.200.1.2:8500"
+      - name: swe
+        url: "http://10.200.1.2:8501"
+
+  pre_tasks:
+    - name: Install docker
+      tags: [never, install_docker]
+      ansible.builtin.import_tasks: ../../tasks/install_docker.yml
+
+  roles:
+    - role: yoke

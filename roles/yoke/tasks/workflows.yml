@@ -1,0 +1,13 @@
+---
+- name: Ensure data dir exists
+  ansible.builtin.file:
+    path: "{{ yoke_data_dir }}"
+    mode: "0755"
+    state: directory
+
+- name: Clone/pull workflows # noqa: latest[git]
+  ansible.builtin.git:
+    repo: "https://github.com/mintybasil/yoke-workflows"
+    dest: "{{ yoke_data_dir }}/yoke-workflows"
+    version: "{{ yoke_workflows_ref }}"
+    update: true
