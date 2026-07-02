@@ -16,6 +16,7 @@
     PATH: "{{ ansible_env['HOME'] }}/.local/bin:{{ ansible_env['PATH'] }}"
   vars:
     hermes_profile: "{{ lookup('env', 'PROFILE') }}"
+    hermes_api_host: "{{ lookup('env', 'API_HOST' }}"
     hermes_api_port: "{{ lookup('env', 'API_PORT') }}"
     hermes_api_secret: "{{ lookup('env', 'API_SECRET') }}"
     hermes_model_provider: "ollama-cloud"
@@ -26,16 +27,30 @@
     hermes_exa_api_key: "{{ lookup('env', 'EXA_API_KEY') }}"
     hermes_gh_token: "{{ lookup('env', 'GH_TOKEN') }}"
     hermes_gh_mcp_port: 8080
+    hermes_dashboard_username: "{{ lookup('env', 'DASH_USER') }}"
+    hermes_dashboard_password: "{{ lookup('env', 'DASH_PW') }}"
 
   roles:
     - role: hermes
+      tags: [never, setup]
       vars:
         hermes_enabled_tasks:
           - profile
           - config
-          - api
           - skills
           - soul
           - model
           - exa_search
           - gh_mcp
+
+    - role: hermes
+      tags: [never, api]
+      vars:
+        hermes_enabled_tasks:
+          - api
+
+    - role: hermes
+      tags: [never, dashboard]
+      vars:
+        hermes_enabled_tasks:
+          - dashboard

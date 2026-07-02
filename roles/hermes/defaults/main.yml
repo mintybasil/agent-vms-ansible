@@ -4,3 +4,5 @@ hermes_model_provider: ollama-cloud
 hermes_model_base_url: https://ollama.com/v1
 hermes_max_turns: 300
 hermes_api_host: "0.0.0.0"
+hermes_dashboard_host: "0.0.0.0"
+hermes_dashboard_port: 9119
