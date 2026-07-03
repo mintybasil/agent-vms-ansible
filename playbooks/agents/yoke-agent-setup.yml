@@ -1,6 +1,6 @@
 ---
 - name: Configure Yoke Agent
-  hosts: yoke-agents-vm
+  hosts: agent_vms
   environment:
     PATH: "{{ ansible_env['HOME'] }}/.local/bin:{{ ansible_env['PATH'] }}"
   vars:
