@@ -2,14 +2,12 @@
 Description=Hermes Agent Dashboard
 After=network-online.target
 Wants=network-online.target
-StartLimitIntervalSec=600
-StartLimitBurst=5
 
 [Service]
 Type=simple
 User=debian
 Group=debian
-ExecStart=/home/debian/.hermes/hermes-agent/venv/bin/python -m hermes_cli.main dashboard --host {{ hermes_dashboard_host }} --port {{ hermes_dashboard_port }}
+ExecStart=/home/debian/.hermes/hermes-agent/venv/bin/python -m hermes_cli.main dashboard --host {{ _dashboard_host }} --port {{ hermes_dashboard_port }} --no-open
 WorkingDirectory=/home/debian/.hermes/hermes-agent
 Environment="HOME=/home/debian"
 Environment="USER=debian"
@@ -21,10 +19,7 @@ Restart=on-failure
 RestartSec=30
 RestartForceExitStatus=75
 KillMode=mixed
-KillSignal=SIGTERM
 ExecReload=/bin/kill -USR1 $MAINPID
-TimeoutStopSec=90
-StandardOutput=journal
 StandardError=journal
 
 [Install]

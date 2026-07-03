@@ -2,8 +2,6 @@
 Description=Hermes Agent Gateway - Messaging Platform Integration
 After=network-online.target
 Wants=network-online.target
-StartLimitIntervalSec=600
-StartLimitBurst=5
 
 [Service]
 Type=simple
@@ -21,10 +19,7 @@ Restart=on-failure
 RestartSec=30
 RestartForceExitStatus=75
 KillMode=mixed
-KillSignal=SIGTERM
 ExecReload=/bin/kill -USR1 $MAINPID
-TimeoutStopSec=90
-StandardOutput=journal
 StandardError=journal
 
 [Install]
