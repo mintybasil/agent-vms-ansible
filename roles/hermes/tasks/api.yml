@@ -34,6 +34,7 @@
 
 - name: Enable and start gateway
   become: true
+  timeout: 300 # Needs to build UI on first run
   ansible.builtin.systemd:
     name: "hermes-gateway-{{ hermes_profile }}"
     state: restarted
