@@ -42,6 +42,47 @@
       vars:
         hermes_dashboard_username: "{{ lookup('env', 'DASH_USER') }}"
         hermes_dashboard_password: "{{ lookup('env', 'DASH_PW') }}"
-        hermes_dashboard_remote_url: "{{ lookup('env', 'DASH_URL') }}"
         hermes_enabled_tasks:
           - dashboard
+
+    - role: hermes
+      tags: [never, profile]
+      vars:
+        hermes_enabled_tasks:
+          - profile
+
+    - role: hermes
+      tags: [never, config]
+      vars:
+        hermes_enabled_tasks:
+          - config
+
+    - role: hermes
+      tags: [never, skills]
+      vars:
+        hermes_enabled_tasks:
+          - skills
+
+    - role: hermes
+      tags: [never, soul]
+      vars:
+        hermes_enabled_tasks:
+          - soul
+
+    - role: hermes
+      tags: [never, model]
+      vars:
+        hermes_enabled_tasks:
+          - model
+
+    - role: hermes
+      tags: [never, exa_search]
+      vars:
+        hermes_enabled_tasks:
+          - exa_search
+
+    - role: hermes
+      tags: [never, gh_mcp]
+      vars:
+        hermes_enabled_tasks:
+          - gh_mcp
