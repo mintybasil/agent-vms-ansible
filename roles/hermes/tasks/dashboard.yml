@@ -25,12 +25,15 @@
   changed_when: true
   no_log: true
 
-
-# dashboard.basic_auth.username + password_hash in config.yaml
-# hash with: python -c "from plugins.dashboard_auth.basic import hash_password; print(hash_password('your-password'))"
+- name: Get tailscale IP
+  command: "tailscale ip -1"
+  register: tailscale_ip
+  changed_when: false
 
 - name: Deploy service file
   become: true
+  vars:
+    _dashboard_host: "{{ tailscale_ip.stdout }}"
   ansible.builtin.template:
     src: dashboard.service.j2
     dest: "/etc/systemd/system/hermes-dashboard.service"
@@ -39,6 +42,7 @@
     mode: "0644"
 
 - name: Ensure service is running
+  become: true
   timeout: 300 # Will build UI on first run
   ansible.builtin.systemd:
     service: "hermes-dashboard"

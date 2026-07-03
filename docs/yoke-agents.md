@@ -11,7 +11,7 @@
  MODEL_API_KEY= \
  MODEL_API_FB_KEY= \
  EXA_API_KEY= \
- ansible-playbook playbooks/agents/yoke-agent-setup.yml
+ ansible-playbook playbooks/agents/yoke-agent-setup.yml --tags setup
 ```
 
 ## Additional Steps

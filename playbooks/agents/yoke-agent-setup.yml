@@ -1,24 +1,10 @@
 ---
-# To use this playbook:
-# PROFILE= \
-# API_PORT= \
-# API_HOST= \
-# API_SECRET= \
-# GH_TOKEN= \
-# MODEL_API_KEY= \
-# MODEL_API_FB_KEY= \
-# EXA_API_KEY= \
-# ansible-playbook playbooks/agents/yoke-agent-setup.yml
-
 - name: Configure Yoke Agent
   hosts: yoke-agents-vm
   environment:
     PATH: "{{ ansible_env['HOME'] }}/.local/bin:{{ ansible_env['PATH'] }}"
   vars:
     hermes_profile: "{{ lookup('env', 'PROFILE') }}"
-    hermes_api_host: "{{ lookup('env', 'API_HOST' }}"
-    hermes_api_port: "{{ lookup('env', 'API_PORT') }}"
-    hermes_api_secret: "{{ lookup('env', 'API_SECRET') }}"
     hermes_model_provider: "ollama-cloud"
     hermes_model_base_url: "https://ollama.com/v1"
     hermes_model_default: "glm-5.2"
@@ -27,8 +13,7 @@
     hermes_exa_api_key: "{{ lookup('env', 'EXA_API_KEY') }}"
     hermes_gh_token: "{{ lookup('env', 'GH_TOKEN') }}"
     hermes_gh_mcp_port: 8080
-    hermes_dashboard_username: "{{ lookup('env', 'DASH_USER') }}"
-    hermes_dashboard_password: "{{ lookup('env', 'DASH_PW') }}"
+
 
   roles:
     - role: hermes
@@ -46,11 +31,17 @@
     - role: hermes
       tags: [never, api]
       vars:
+        hermes_api_host: "{{ lookup('env', 'API_HOST' }}"
+        hermes_api_port: "{{ lookup('env', 'API_PORT') }}"
+        hermes_api_secret: "{{ lookup('env', 'API_SECRET') }}"
         hermes_enabled_tasks:
           - api
 
     - role: hermes
       tags: [never, dashboard]
       vars:
+        hermes_dashboard_username: "{{ lookup('env', 'DASH_USER') }}"
+        hermes_dashboard_password: "{{ lookup('env', 'DASH_PW') }}"
+        hermes_dashboard_remote_url: "{{ lookup('env', 'DASH_URL') }}"
         hermes_enabled_tasks:
           - dashboard
