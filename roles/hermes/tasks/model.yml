@@ -18,6 +18,7 @@
     hermes_value: "{{ hermes_model_default }}"
 
 - name: Set model API key
+  when: hermes_model_api_key != ""
   ansible.builtin.import_tasks: utils/set-env.yml
   vars:
     hermes_key: "OLLAMA_API_KEY"

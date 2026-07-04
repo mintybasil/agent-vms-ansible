@@ -1,6 +1,12 @@
 ---
-- name: Create/reset config
+- name: Check if config exists
+  register: config_stat
+  ansible.builtin.stat:
+    path: "{{ hermes_home }}/config.yaml"
+
+- name: Create config
   ansible.builtin.command: "{{ hermes_profile }} setup --reset --non-interactive"
+  when: not config_stat.stat.exists
   register: reset_cfg
   changed_when: reset_cfg.rc == 0
 
@@ -9,6 +15,12 @@
   vars:
     hermes_key: "agent.max_turns"
     hermes_value: "{{ hermes_max_turns }}"
+
+- name: Disable approvals (YOLO mode)
+  import_tasks: utils/set-env.yml
+  vars:
+    hermes_key: "HERMES_YOLO_MODE"
+    hermes_value: "1"
 
 - name: Set sudo password
   import_tasks: utils/set-env.yml

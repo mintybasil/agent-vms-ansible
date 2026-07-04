@@ -1,23 +1,10 @@
 ---
-# To use this playbook:
-# PROFILE= \
-# API_PORT= \
-# API_HOST= \
-# API_SECRET= \
-# GH_TOKEN= \
-# MODEL_API_KEY= \
-# MODEL_API_FB_KEY= \
-# EXA_API_KEY= \
-# ansible-playbook playbooks/agents/yoke-agent-setup.yml
-
 - name: Configure Yoke Agent
-  hosts: yoke-agents-vm
+  hosts: agent_vms
   environment:
     PATH: "{{ ansible_env['HOME'] }}/.local/bin:{{ ansible_env['PATH'] }}"
   vars:
     hermes_profile: "{{ lookup('env', 'PROFILE') }}"
-    hermes_api_port: "{{ lookup('env', 'API_PORT') }}"
-    hermes_api_secret: "{{ lookup('env', 'API_SECRET') }}"
     hermes_model_provider: "ollama-cloud"
     hermes_model_base_url: "https://ollama.com/v1"
     hermes_model_default: "glm-5.2"
@@ -27,15 +14,75 @@
     hermes_gh_token: "{{ lookup('env', 'GH_TOKEN') }}"
     hermes_gh_mcp_port: 8080
 
+
   roles:
     - role: hermes
+      tags: [never, setup]
       vars:
         hermes_enabled_tasks:
           - profile
           - config
-          - api
           - skills
           - soul
           - model
           - exa_search
+          - gh_mcp
+
+    - role: hermes
+      tags: [never, api]
+      vars:
+        hermes_api_host: "{{ lookup('env', 'API_HOST' }}"
+        hermes_api_port: "{{ lookup('env', 'API_PORT') }}"
+        hermes_api_secret: "{{ lookup('env', 'API_SECRET') }}"
+        hermes_enabled_tasks:
+          - api
+
+    - role: hermes
+      tags: [never, dashboard]
+      vars:
+        hermes_dashboard_username: "{{ lookup('env', 'DASH_USER') }}"
+        hermes_dashboard_password: "{{ lookup('env', 'DASH_PW') }}"
+        hermes_enabled_tasks:
+          - dashboard
+
+    - role: hermes
+      tags: [never, profile]
+      vars:
+        hermes_enabled_tasks:
+          - profile
+
+    - role: hermes
+      tags: [never, config]
+      vars:
+        hermes_enabled_tasks:
+          - config
+
+    - role: hermes
+      tags: [never, skills]
+      vars:
+        hermes_enabled_tasks:
+          - skills
+
+    - role: hermes
+      tags: [never, soul]
+      vars:
+        hermes_enabled_tasks:
+          - soul
+
+    - role: hermes
+      tags: [never, model]
+      vars:
+        hermes_enabled_tasks:
+          - model
+
+    - role: hermes
+      tags: [never, exa_search]
+      vars:
+        hermes_enabled_tasks:
+          - exa_search
+
+    - role: hermes
+      tags: [never, gh_mcp]
+      vars:
+        hermes_enabled_tasks:
           - gh_mcp

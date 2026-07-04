@@ -1,7 +1,9 @@
 ---
 - name: "Set {{ hermes_key }} env var"
+  vars:
+    hermes_env_path: "{{ ansible_user_dir }}/.hermes/{{ (hermes_profile != '') | ternary('profiles/' ~ hermes_profile ~ '/', '') }}.env"
   ansible.builtin.lineinfile:
-    path: "{{ ansible_user_dir }}/.hermes/profiles/{{ hermes_profile }}/.env"
+    path: "{{ hermes_env_path }}"
     regexp: '^{{ hermes_key }}='
     line: '{{ hermes_key }}={{ hermes_value }}'
     create: true
