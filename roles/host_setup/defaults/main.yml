@@ -24,3 +24,8 @@ promtail_positions_path: /var/lib/promtail/positions.yaml
 ssh_permit_root_login: "no"
 # PasswordAuthentication: no or yes
 ssh_password_authentication: "no"
+
+# TODO: Remove the need to duplicate these from the libvirt role
+vm_bridge_prefix: "vmbr"
+vm_bridge_offset: 10
+vm_subnet_base: 0
