@@ -66,7 +66,7 @@ Hardened VM deployments for running agents.
 ### 4) Setup libvirt
 1. Install and configure libvirt:
    ```shell
-   ansible-playbook playbooks/host-setup.yml --tags libvirt --ask-become-pass
+   ansible-playbook playbooks/vm-deploy.yml --tags setup,pool --ask-become-pass
    ```
 
 ### 5) Deploy firewall
@@ -91,13 +91,17 @@ Hardened VM deployments for running agents.
 3. Deploy/update all VMs in `vms`:
     ```shell
     # Deploy all, with tailscale key for setup
-    ansible-playbook playbooks/vm-deploy.yml --ask-become-pass -e tailscale_auth_key=<key>
+    ansible-playbook playbooks/vm-deploy.yml --tags network,vms --ask-become-pass -e tailscale_auth_key=<key>
     # OR - Update/deploy all
-    ansible-playbook playbooks/vm-deploy.yml --ask-become-pass
+    ansible-playbook playbooks/vm-deploy.yml --tags network,vms --ask-become-pass
     # OR - Deploy specific vm, with tailscale key for setup
-    ansible-playbook playbooks/vm-deploy.yml --ask-become-pass -e vm_name=<vm-name> -e tailscale_auth_key=<key>
+    ansible-playbook playbooks/vm-deploy.yml --tags network,vms --ask-become-pass -e vm_name=<vm-name> -e tailscale_auth_key=<key>
     # OR - Update specific vm
-    ansible-playbook playbooks/vm-deploy.yml --ask-become-pass -e vm_name=<vm-name>
+    ansible-playbook playbooks/vm-deploy.yml --tags network,vms --ask-become-pass -e vm_name=<vm-name>
+    ```
+4. Update nftables (required only for network changes, including VM creation/destruction)
+    ```shell
+    ansible-playbook playbooks/host-setup.yml --ask-become-pass --tags nftables
     ```
 5. Verify VM(s) are reachable via Tailscale SSH after boot
 6. Ensure `inventory/hosts.yml` includes VM host entries you want to configure with VM-level playbooks
