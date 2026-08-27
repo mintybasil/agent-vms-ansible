@@ -1,0 +1,53 @@
+---
+- name: Set auth username
+  ansible.builtin.import_tasks: utils/set-env.yml
+  when: hermes_serve_username != ''
+  vars:
+    hermes_key: HERMES_DASHBOARD_BASIC_AUTH_USERNAME
+    hermes_value: "{{ hermes_serve_username }}"
+
+- name: Set auth password
+  ansible.builtin.import_tasks: utils/set-env.yml
+  when: hermes_serve_password != ''
+  vars:
+    hermes_key: HERMES_DASHBOARD_BASIC_AUTH_PASSWORD
+    hermes_value: "{{ hermes_serve_password }}"
+
+- name: Set auth secret
+  ansible.builtin.shell: |
+    set -eo pipefail
+    env_file={{ ansible_user_dir }}/.hermes/profiles/{{ hermes_profile }}/.env
+    if grep -q '^HERMES_DASHBOARD_BASIC_AUTH_SECRET=' "$env_file"; then
+      sed -i "s/^HERMES_DASHBOARD_BASIC_AUTH_SECRET=.*/HERMES_DASHBOARD_BASIC_AUTH_SECRET=$(openssl rand -hex 32)/" "$env_file"
+    else
+      echo "HERMES_DASHBOARD_BASIC_AUTH_SECRET=$(openssl rand -hex 32)" >> "$env_file"
+    fi
+  args:
+    executable: /bin/bash
+  changed_when: true
+  no_log: true
+
+- name: Get tailscale IP
+  command: "tailscale ip -1"
+  register: tailscale_ip
+  changed_when: false
+
+- name: Deploy service file
+  become: true
+  vars:
+    _serve_host: "{{ tailscale_ip.stdout }}"
+  ansible.builtin.template:
+    src: serve.service.j2
+    dest: "/etc/systemd/system/hermes-serve.service"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Ensure service is running
+  become: true
+  timeout: 300 # Will build UI on first run
+  ansible.builtin.systemd:
+    service: "hermes-serve"
+    state: restarted
+    enabled: true
+    daemon_reload: true

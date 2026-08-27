@@ -86,3 +86,11 @@
       vars:
         hermes_enabled_tasks:
           - gh_mcp
+
+    - role: hermes
+      tags: [never, serve]
+      vars:
+        hermes_serve_username: "{{ lookup('env', 'SERVE_USER') }}"
+        hermes_serve_password: "{{ lookup('env', 'SERVE_PW') }}"
+        hermes_enabled_tasks:
+          - serve
