@@ -1,24 +1,4 @@
 ---
-- name: Install KVM, libvirt, cloud-init packages
-  ansible.builtin.apt:
-    name:
-      - qemu-kvm
-      - qemu-utils
-      - libvirt-daemon-system
-      - libvirt-clients
-      - bridge-utils
-      - virt-install
-      - cloud-image-utils
-      - python3-lxml
-    state: present
-    update_cache: true
-
-- name: Ensure libvirtd is running
-  ansible.builtin.systemd:
-    name: libvirtd
-    state: started
-    enabled: true
-
 # Per-VM isolated networks. Each VM gets its own bridge and /30 subnet so that
 # inter-VM traffic must traverse the host FORWARD chain where nftables can
 # apply default-deny + explicit allow rules.
@@ -74,23 +54,3 @@
   loop_control:
     loop_var: network
     label: "{{ network.name }}"
-
-# The storage pool is shared across all VMs — images are distinguished by name.
-- name: Check if default pool exists
-  community.libvirt.virt_pool:
-    command: list_pools
-  register: pools
-
-- name: Create default pool if missing
-  community.libvirt.virt_pool:
-    name: default
-    state: present
-    xml: "{{ lookup('file', 'pool.xml') }}"
-  when: "'default' not in pools.list_pools"
-
-- name: Ensure default pool is active and autostarts
-  community.libvirt.virt_pool:
-    name: default
-    state: active
-    autostart: true
-  when: "'default' not in pools.list_pools"

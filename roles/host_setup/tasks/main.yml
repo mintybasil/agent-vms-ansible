@@ -18,7 +18,3 @@
 - name: Include Promtail tasks
   ansible.builtin.import_tasks: promtail.yml
   tags: [never, promtail]
-
-- name: Include libvirt tasks
-  ansible.builtin.import_tasks: libvirt.yml
-  tags: [never, libvirt]

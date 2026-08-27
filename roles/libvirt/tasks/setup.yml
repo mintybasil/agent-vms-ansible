@@ -1,0 +1,20 @@
+---
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - qemu-kvm
+      - qemu-utils
+      - libvirt-daemon-system
+      - libvirt-clients
+      - bridge-utils
+      - virt-install
+      - cloud-image-utils
+      - python3-lxml
+    state: present
+    update_cache: true
+
+- name: Ensure libvirtd is running
+  ansible.builtin.systemd:
+    name: libvirtd
+    state: started
+    enabled: true

@@ -1,0 +1,16 @@
+---
+- name: Setup system
+  tags: [never, setup]
+  ansible.builtin.import_tasks: setup.yml
+
+- name: Configure pool
+  tags: [never, pool]
+  ansible.builtin.import_tasks: pool.yml
+
+- name: Configure network interfaces
+  tags: [network]
+  ansible.builtin.import_tasks: networking.yml
+
+- name: Update vms
+  tags: [vms]
+  ansible.builtin.import_tasks: vms.yml
